@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Sparkles, Mail, Lock, User, ArrowRight, Loader2, Clock } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Register() {
   const [name, setName] = useState("");
@@ -12,17 +13,22 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const { register } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    
-    // TODO: Remplacer par une vraie inscription
-    setTimeout(() => {
-      setLoading(false);
+
+    try {
+      await register(name, email, password);
       setSubmitted(true);
       toast.success("Inscription envoyée !");
-    }, 1000);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Registration failed";
+      toast.error(message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (submitted) {

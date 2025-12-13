@@ -1,73 +1,297 @@
-# Welcome to your Lovable project
+# Raphartage Club - Full Stack Application
 
-## Project info
+A comprehensive item sharing and borrowing platform built with modern web technologies.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 📁 Project Structure
 
-## How can I edit this code?
+This is a monorepo with the following structure:
 
-There are several ways of editing your application.
+```
+raphartage-club/
+├── frontend/              # React + Vite + shadcn-ui frontend
+├── backend/               # Node.js + Express + PostgreSQL backend
+├── shared/                # Shared types and validation schemas
+└── package.json           # Root workspace configuration
+```
 
-**Use Lovable**
+## 🎯 Features
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### Frontend
+- User authentication and authorization
+- Item management (create, list, view details)
+- Image upload and gallery
+- Borrow request system
+- Admin approval workflow
+- Responsive design with Tailwind CSS
 
-Changes made via Lovable will be committed automatically to this repo.
+### Backend
+- RESTful API with Express.js
+- PostgreSQL database with Prisma ORM
+- JWT-based authentication
+- File upload handling with Multer
+- Admin user management
+- Rate limiting and security headers
 
-**Use your preferred IDE**
+## 🚀 Quick Start
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Prerequisites
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- Node.js 18+
+- PostgreSQL 15+
+- npm or yarn
 
-Follow these steps:
+### Installation
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+1. Clone and install dependencies:
+```bash
+# Install root dependencies
+npm install
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Install both frontend and backend dependencies
+npm install --workspaces
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+2. Set up environment variables:
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+**Backend** (`backend/.env`):
+```bash
+NODE_ENV=development
+PORT=3000
+FRONTEND_URL=http://localhost:8080
+DATABASE_URL=postgresql://user:password@localhost:5432/raphartage_club
+JWT_SECRET=your-secret-key-min-32-chars
+ADMIN_EMAIL=admin@example.com
+```
+
+**Frontend** (`frontend/.env`):
+```bash
+VITE_API_URL=http://localhost:3000
+```
+
+3. Set up the database:
+```bash
+npm run db:migrate
+npm run db:seed
+```
+
+4. Start both frontend and backend:
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Or run them separately:
+```bash
+npm run dev:frontend   # Frontend on http://localhost:8080
+npm run dev:backend    # Backend on http://localhost:3000
+```
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📚 Documentation
 
-**Use GitHub Codespaces**
+### Frontend
+- See [`frontend/README.md`](./frontend) for frontend setup and development
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Backend
+- See [`backend/README.md`](./backend) for API documentation and backend setup
 
-## What technologies are used for this project?
+### Shared Code
+- [`shared/validation.ts`](./shared/validation.ts) - Zod validation schemas
 
-This project is built with:
+## 🛠️ Development Commands
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Root Level Commands
+```bash
+# Start both frontend and backend concurrently
+npm run dev
 
-## How can I deploy this project?
+# Build both frontend and backend
+npm run build
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+# Database commands
+npm run db:migrate      # Create database migration
+npm run db:push         # Push schema to database
+npm run db:studio       # Open Prisma Studio
+npm run db:seed         # Seed database with sample data
+npm run db:reset        # Reset and reseed database
+```
 
-## Can I connect a custom domain to my Lovable project?
+### Frontend Only
+```bash
+npm run dev:frontend    # Start frontend dev server
+npm run build:frontend  # Build frontend
+```
 
-Yes, you can!
+### Backend Only
+```bash
+npm run dev:backend     # Start backend dev server with hot reload
+npm run build:backend   # Build backend
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 🏗️ Technology Stack
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+### Frontend
+- **Framework**: React 18
+- **Build Tool**: Vite 5
+- **Language**: TypeScript 5
+- **Styling**: Tailwind CSS 3
+- **UI Components**: shadcn-ui / Radix UI
+- **Routing**: React Router 6
+- **State Management**: React Query (TanStack Query)
+- **Forms**: React Hook Form
+- **Validation**: Zod
+
+### Backend
+- **Runtime**: Node.js 18+
+- **Framework**: Express.js 4
+- **Language**: TypeScript 5
+- **Database**: PostgreSQL 15+
+- **ORM**: Prisma 5
+- **Authentication**: JWT + bcrypt
+- **File Upload**: Multer
+- **Security**: Helmet, CORS, Rate Limiting
+- **Validation**: Zod
+
+## 🔐 Authentication Flow
+
+1. **Register**: New users register with email, password, and name
+2. **Pending Approval**: Accounts start in PENDING status
+3. **Admin Approval**: Admin users review and approve/reject registrations
+4. **Login**: Approved users can login with JWT token
+5. **Session**: JWT token stored in httpOnly cookie for security
+
+## 📊 Database Schema
+
+The database includes:
+- **Users**: Authentication and profile management
+- **Items**: Shareable items with metadata
+- **ItemImages**: Images associated with items
+- **BorrowRequests**: Borrowing request lifecycle
+
+See `backend/prisma/schema.prisma` for detailed schema.
+
+## 📝 API Endpoints
+
+### Authentication
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - Login user
+- `POST /api/auth/logout` - Logout user
+- `GET /api/auth/me` - Get current user
+
+### Items
+- `GET /api/items` - List items with pagination
+- `GET /api/items/:id` - Get item details
+- `POST /api/items` - Create new item
+- `PATCH /api/items/:id` - Update item
+- `DELETE /api/items/:id` - Delete item
+
+### Images
+- `POST /api/items/:itemId/images` - Upload images
+- `DELETE /api/items/:itemId/images/:imageId` - Delete image
+- `PATCH /api/items/:itemId/images/reorder` - Reorder images
+
+### Borrow Requests
+- `GET /api/requests` - Get my requests
+- `GET /api/demands` - Get requests for my items
+- `POST /api/requests` - Create request
+- `PATCH /api/requests/:id/approve` - Approve request
+- `PATCH /api/requests/:id/reject` - Reject request
+- `PATCH /api/requests/:id/complete` - Complete request
+
+### Admin
+- `GET /api/admin/users` - List users
+- `PATCH /api/admin/users/:id/approve` - Approve user
+- `PATCH /api/admin/users/:id/reject` - Reject user
+
+## 🔒 Security
+
+- Password hashing with bcrypt
+- JWT authentication with secure cookies
+- CORS with origin whitelist
+- Rate limiting on auth endpoints
+- Helmet security headers
+- Input validation with Zod
+- SQL injection protection via Prisma
+
+## 📝 Project Structure
+
+```
+raphartage-club/
+├── frontend/
+│   ├── src/
+│   │   ├── components/     # React components
+│   │   ├── pages/          # Page components
+│   │   ├── hooks/          # Custom React hooks
+│   │   ├── services/       # API services
+│   │   └── App.tsx
+│   ├── index.html
+│   ├── vite.config.ts
+│   └── package.json
+│
+├── backend/
+│   ├── src/
+│   │   ├── routes/         # API routes
+│   │   ├── controllers/    # Route handlers
+│   │   ├── middleware/     # Express middleware
+│   │   ├── services/       # Business logic
+│   │   ├── config/         # Configuration
+│   │   └── server.ts
+│   ├── prisma/
+│   │   ├── schema.prisma
+│   │   └── seed.ts
+│   └── package.json
+│
+├── shared/
+│   └── validation.ts       # Shared Zod schemas
+│
+└── package.json            # Root workspace config
+```
+
+## 🚀 Deployment
+
+### Prerequisites for Production
+- PostgreSQL 15+ instance
+- Node.js 18+ runtime
+- Environment variables configured
+- HTTPS/SSL certificate
+
+### Build for Production
+```bash
+npm run build
+```
+
+### Environment Variables for Production
+```bash
+NODE_ENV=production
+PORT=3000
+DATABASE_URL=postgresql://user:password@host:5432/db
+JWT_SECRET=long-random-string-min-32-chars
+CORS_ORIGIN=https://yourdomain.com
+# ... other variables
+```
+
+## 📞 Support
+
+For issues and questions:
+1. Check the [Backend README](./backend/README.md)
+2. Check the [Frontend README](./frontend)
+3. Review Prisma [documentation](https://www.prisma.io/docs)
+4. Review Express [documentation](https://expressjs.com/)
+
+## 📄 License
+
+MIT License
+
+## 🎉 Ready to Use!
+
+The project is fully set up and ready for development. Start with:
+
+```bash
+npm install
+npm run db:migrate
+npm run db:seed
+npm run dev
+```
+
+Then visit:
+- Frontend: http://localhost:8080
+- Backend: http://localhost:3000
+- API Docs: Check `backend/README.md` for endpoint documentation

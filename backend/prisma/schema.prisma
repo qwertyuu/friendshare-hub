@@ -1,0 +1,127 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum UserStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ItemStatus {
+  AVAILABLE
+  BORROWED
+  UNAVAILABLE
+}
+
+enum ItemCategory {
+  TOOLS
+  KITCHEN
+  SPORTS
+  ELECTRONICS
+  BOOKS
+  GAMES
+  CAMPING
+  OTHER
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+model User {
+  id            String          @id @default(uuid())
+  email         String          @unique
+  passwordHash  String          @map("password_hash")
+  name          String
+  role          UserRole        @default(USER)
+  status        UserStatus      @default(PENDING)
+  createdAt     DateTime        @default(now()) @map("created_at")
+  updatedAt     DateTime        @updatedAt @map("updated_at")
+
+  // Relations
+  items         Item[]
+  requests      BorrowRequest[] @relation("Requester")
+  demands       BorrowRequest[] @relation("Owner")
+
+  @@map("users")
+}
+
+model Item {
+  id          String       @id @default(uuid())
+  ownerId     String       @map("owner_id")
+  title       String
+  description String?
+  category    ItemCategory
+  status      ItemStatus   @default(AVAILABLE)
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  owner       User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  images      ItemImage[]
+  requests    BorrowRequest[]
+
+  @@index([ownerId])
+  @@index([category])
+  @@index([status])
+  @@map("items")
+}
+
+model ItemImage {
+  id           String   @id @default(uuid())
+  itemId       String   @map("item_id")
+  filePath     String   @map("file_path")
+  fileName     String   @map("file_name")
+  mimeType     String   @map("mime_type")
+  fileSize     Int      @map("file_size")
+  displayOrder Int      @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  // Relations
+  item         Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@index([itemId])
+  @@map("item_images")
+}
+
+model BorrowRequest {
+  id              String        @id @default(uuid())
+  itemId          String        @map("item_id")
+  requesterId     String        @map("requester_id")
+  ownerId         String        @map("owner_id")
+  status          RequestStatus @default(PENDING)
+  startDate       DateTime?     @map("start_date")
+  endDate         DateTime?     @map("end_date")
+  message         String?
+  responseMessage String?       @map("response_message")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+
+  // Relations
+  item            Item          @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  requester       User          @relation("Requester", fields: [requesterId], references: [id], onDelete: Cascade)
+  owner           User          @relation("Owner", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([itemId])
+  @@index([requesterId])
+  @@index([ownerId])
+  @@index([status])
+  @@map("borrow_requests")
+}
