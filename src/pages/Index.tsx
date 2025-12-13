@@ -38,12 +38,12 @@ const Index = () => {
 
               {/* Main heading */}
               <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 animate-fade-in" style={{ animationDelay: "0.1s" }}>
-                Le <span className="text-gradient-hero">Raphivers</span>
+                <span className="text-gradient-hero">Raphartage Club</span>
               </h1>
 
               {/* Subtitle */}
               <p className="text-xl md:text-2xl text-muted-foreground max-w-xl mx-auto mb-10 animate-fade-in" style={{ animationDelay: "0.2s" }}>
-                L'univers de partage entre amis
+                Le club de partage entre amis
               </p>
 
               {/* CTA Buttons */}
@@ -93,7 +93,7 @@ const Index = () => {
         <footer className="py-12">
           <div className="container text-center">
             <p className="text-sm text-muted-foreground">
-              <span className="font-medium">Raphivers</span> = Raphaël + Univers
+              <span className="font-medium">Raphartage Club</span> = Raphaël + Partage
             </p>
             <p className="mt-2 text-sm text-muted-foreground flex items-center justify-center gap-1">
               Fait avec <Heart className="h-4 w-4 text-destructive inline" /> pour les amis

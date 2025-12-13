@@ -53,7 +53,7 @@ export default function Register() {
         <div className="max-w-md text-center text-primary-foreground">
           <div className="text-6xl mb-6">✨</div>
           <h2 className="text-3xl font-bold mb-4">
-            Rejoins le Raphivers
+            Rejoins le Raphartage Club
           </h2>
           <p className="text-lg opacity-90">
             Crée ton compte pour accéder à l'inventaire partagé de tes amis.
@@ -70,7 +70,7 @@ export default function Register() {
               <Sparkles className="h-5 w-5 text-primary-foreground" />
             </div>
             <span className="text-xl font-bold text-foreground">
-              Le <span className="text-primary">Raphivers</span>
+              <span className="text-primary">Raphartage Club</span>
             </span>
           </Link>
 
