@@ -12,40 +12,23 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus, Search, User, MessageSquare, HandHeart } from "lucide-react";
+import { Plus, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 
-// Mock data
-const mockDemands = [
-  { id: 1, title: "Looking for a bicycle", description: "Need one for weekend rides, any type works!", user: "Sarah", timeAgo: "2 hours ago" },
-  { id: 2, title: "Anyone have a projector?", description: "For a movie night this Saturday", user: "Mike", timeAgo: "5 hours ago" },
-  { id: 3, title: "Need a sewing machine", description: "Just for a quick hem, will return same day", user: "Emma", timeAgo: "1 day ago" },
-  { id: 4, title: "Looking for board games", description: "Hosting game night, need 4+ player games", user: "Alex", timeAgo: "2 days ago" },
-];
-
 export default function Demands() {
-  const [demands, setDemands] = useState(mockDemands);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newDemand, setNewDemand] = useState({ title: "", description: "" });
 
   const handleAddDemand = () => {
     if (!newDemand.title) {
-      toast.error("Please add a title for your request");
+      toast.error("Dis-nous ce que tu cherches");
       return;
     }
     
-    setDemands([
-      { 
-        id: Date.now(), 
-        ...newDemand, 
-        user: "You", 
-        timeAgo: "Just now" 
-      },
-      ...demands
-    ]);
+    // TODO: Sauvegarder en base
     setNewDemand({ title: "", description: "" });
     setDialogOpen(false);
-    toast.success("Request posted! Hopefully someone has what you need.");
+    toast.success("Demande publiée !");
   };
 
   return (
@@ -56,41 +39,41 @@ export default function Demands() {
         {/* Page Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Open Demands</h1>
-            <p className="text-muted-foreground">See what people are looking for & offer to help</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Demandes</h1>
+            <p className="text-muted-foreground">Ce que les autres cherchent à emprunter</p>
           </div>
           
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="warm">
                 <Plus className="h-4 w-4" />
-                Post a Request
+                Publier une demande
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
-                <DialogTitle>Looking for something?</DialogTitle>
+                <DialogTitle>Tu cherches quelque chose ?</DialogTitle>
                 <DialogDescription>
-                  Post a request and someone with that item might offer to lend it
+                  Publie ta demande, peut-être que quelqu'un a ce qu'il te faut
                 </DialogDescription>
               </DialogHeader>
               
               <div className="space-y-4 mt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="title">What do you need? *</Label>
+                  <Label htmlFor="title">Qu'est-ce que tu cherches ? *</Label>
                   <Input
                     id="title"
-                    placeholder="e.g., Looking for a ladder"
+                    placeholder="Ex: Un vélo pour le week-end"
                     value={newDemand.title}
                     onChange={(e) => setNewDemand({ ...newDemand, title: e.target.value })}
                   />
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="description">More details</Label>
+                  <Label htmlFor="description">Plus de détails</Label>
                   <Textarea
                     id="description"
-                    placeholder="When do you need it? Any specific requirements?"
+                    placeholder="Quand en as-tu besoin ? Des contraintes particulières ?"
                     value={newDemand.description}
                     onChange={(e) => setNewDemand({ ...newDemand, description: e.target.value })}
                     rows={3}
@@ -98,63 +81,25 @@ export default function Demands() {
                 </div>
                 
                 <Button onClick={handleAddDemand} className="w-full" variant="warm">
-                  Post Request
+                  Publier
                 </Button>
               </div>
             </DialogContent>
           </Dialog>
         </div>
 
-        {/* Demands List */}
-        <div className="space-y-4">
-          {demands.map((demand, index) => (
-            <div
-              key={demand.id}
-              className="flex items-start gap-4 p-6 rounded-2xl bg-card border border-border/50 shadow-soft animate-fade-in"
-              style={{ animationDelay: `${index * 0.05}s` }}
-            >
-              {/* Icon */}
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent/20 text-accent shrink-0">
-                <Search className="h-6 w-6" />
-              </div>
-              
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <h3 className="font-semibold text-lg text-foreground mb-1">{demand.title}</h3>
-                {demand.description && (
-                  <p className="text-muted-foreground mb-3">{demand.description}</p>
-                )}
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <span className="flex items-center gap-1">
-                    <User className="h-4 w-4" />
-                    {demand.user}
-                  </span>
-                  <span>{demand.timeAgo}</span>
-                </div>
-              </div>
-              
-              {/* Action */}
-              <Button variant="success" className="shrink-0">
-                <HandHeart className="h-4 w-4" />
-                I Have This!
-              </Button>
-            </div>
-          ))}
-        </div>
-
-        {demands.length === 0 && (
-          <div className="text-center py-16">
-            <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-muted mb-4">
-              <MessageSquare className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-semibold text-foreground mb-2">No open requests</h3>
-            <p className="text-muted-foreground mb-6">Be the first to post what you're looking for</p>
-            <Button variant="warm" onClick={() => setDialogOpen(true)}>
-              <Plus className="h-4 w-4" />
-              Post a Request
-            </Button>
+        {/* Empty State */}
+        <div className="text-center py-16">
+          <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-muted mb-4">
+            <MessageSquare className="h-8 w-8 text-muted-foreground" />
           </div>
-        )}
+          <h3 className="text-lg font-semibold text-foreground mb-2">Aucune demande</h3>
+          <p className="text-muted-foreground mb-6">Sois le premier à demander quelque chose</p>
+          <Button variant="warm" onClick={() => setDialogOpen(true)}>
+            <Plus className="h-4 w-4" />
+            Publier une demande
+          </Button>
+        </div>
       </main>
     </div>
   );
