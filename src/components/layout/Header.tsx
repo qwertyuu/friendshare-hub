@@ -1,13 +1,13 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Package, Menu, X, LogIn, UserPlus } from "lucide-react";
+import { Sparkles, Menu, X, LogIn, UserPlus } from "lucide-react";
 import { useState } from "react";
 
 const navLinks = [
-  { to: "/browse", label: "Browse Items" },
-  { to: "/demands", label: "Open Demands" },
-  { to: "/my-items", label: "My Items" },
-  { to: "/requests", label: "Requests" },
+  { to: "/browse", label: "Parcourir" },
+  { to: "/demands", label: "Demandes" },
+  { to: "/my-items", label: "Mes objets" },
+  { to: "/requests", label: "Emprunts" },
 ];
 
 export function Header() {
@@ -21,10 +21,10 @@ export function Header() {
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 group">
           <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-hero shadow-soft group-hover:shadow-glow transition-shadow duration-300">
-            <Package className="h-5 w-5 text-primary-foreground" />
+            <Sparkles className="h-5 w-5 text-primary-foreground" />
           </div>
           <span className="text-lg font-bold text-foreground">
-            Raphartage<span className="text-primary">Club</span>
+            Le <span className="text-primary">Raphivers</span>
           </span>
         </Link>
 
@@ -54,19 +54,19 @@ export function Header() {
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/login">
                   <LogIn className="h-4 w-4" />
-                  Sign In
+                  Connexion
                 </Link>
               </Button>
               <Button variant="hero" size="sm" asChild>
                 <Link to="/register">
                   <UserPlus className="h-4 w-4" />
-                  Join Club
+                  S'inscrire
                 </Link>
               </Button>
             </>
           ) : (
             <Button variant="outline" size="sm" asChild>
-              <Link to="/">Sign Out</Link>
+              <Link to="/">Déconnexion</Link>
             </Button>
           )}
         </div>
@@ -108,19 +108,19 @@ export function Header() {
                 <>
                   <Button variant="outline" className="flex-1" asChild>
                     <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
-                      Sign In
+                      Connexion
                     </Link>
                   </Button>
                   <Button variant="hero" className="flex-1" asChild>
                     <Link to="/register" onClick={() => setMobileMenuOpen(false)}>
-                      Join Club
+                      S'inscrire
                     </Link>
                   </Button>
                 </>
               ) : (
                 <Button variant="outline" className="flex-1" asChild>
                   <Link to="/" onClick={() => setMobileMenuOpen(false)}>
-                    Sign Out
+                    Déconnexion
                   </Link>
                 </Button>
               )}

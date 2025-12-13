@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Package, Mail, Lock, User, ArrowRight, Loader2, Clock } from "lucide-react";
+import { Sparkles, Mail, Lock, User, ArrowRight, Loader2, Clock } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Register() {
@@ -12,17 +12,16 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
-  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
-    // Simulate registration - will be replaced with real auth
+    // TODO: Remplacer par une vraie inscription
     setTimeout(() => {
       setLoading(false);
       setSubmitted(true);
-      toast.success("Registration submitted! Waiting for approval.");
+      toast.success("Inscription envoyée !");
     }, 1000);
   };
 
@@ -34,13 +33,13 @@ export default function Register() {
             <Clock className="h-10 w-10 text-accent" />
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-4">
-            Waiting for approval
+            En attente de validation
           </h1>
           <p className="text-muted-foreground mb-8">
-            Your request to join has been submitted. An admin will review your application and you'll receive an email when you're approved.
+            Ta demande a été envoyée. Un admin va valider ton compte et tu recevras un email quand ce sera fait.
           </p>
           <Button variant="outline" asChild>
-            <Link to="/">Back to Home</Link>
+            <Link to="/">Retour à l'accueil</Link>
           </Button>
         </div>
       </div>
@@ -52,12 +51,12 @@ export default function Register() {
       {/* Left side - Decorative */}
       <div className="hidden lg:flex flex-1 bg-gradient-hero items-center justify-center p-12">
         <div className="max-w-md text-center text-primary-foreground">
-          <div className="text-6xl mb-6">🎉</div>
+          <div className="text-6xl mb-6">✨</div>
           <h2 className="text-3xl font-bold mb-4">
-            Join the club
+            Rejoins le Raphivers
           </h2>
           <p className="text-lg opacity-90">
-            Get access to a shared inventory of items from your friends. List your own stuff and borrow what you need.
+            Crée ton compte pour accéder à l'inventaire partagé de tes amis.
           </p>
         </div>
       </div>
@@ -68,29 +67,29 @@ export default function Register() {
           {/* Logo */}
           <Link to="/" className="inline-flex items-center gap-2 mb-10 group">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-hero shadow-soft group-hover:shadow-glow transition-shadow duration-300">
-              <Package className="h-5 w-5 text-primary-foreground" />
+              <Sparkles className="h-5 w-5 text-primary-foreground" />
             </div>
             <span className="text-xl font-bold text-foreground">
-              Raphartage<span className="text-primary">Club</span>
+              Le <span className="text-primary">Raphivers</span>
             </span>
           </Link>
 
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            Create your account
+            Créer un compte
           </h1>
           <p className="text-muted-foreground mb-8">
-            Request to join the club. An admin will approve your membership.
+            Inscris-toi pour rejoindre le groupe
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name">Prénom</Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   id="name"
                   type="text"
-                  placeholder="John Doe"
+                  placeholder="Ton prénom"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="pl-10"
@@ -106,7 +105,7 @@ export default function Register() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder="ton@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
@@ -116,7 +115,7 @@ export default function Register() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Mot de passe</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -130,7 +129,7 @@ export default function Register() {
                   minLength={6}
                 />
               </div>
-              <p className="text-xs text-muted-foreground">Minimum 6 characters</p>
+              <p className="text-xs text-muted-foreground">Minimum 6 caractères</p>
             </div>
 
             <Button type="submit" variant="hero" size="lg" className="w-full" disabled={loading}>
@@ -138,7 +137,7 @@ export default function Register() {
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <>
-                  Request to Join
+                  S'inscrire
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
@@ -147,9 +146,9 @@ export default function Register() {
 
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
-              Already have an account?{" "}
+              Déjà un compte ?{" "}
               <Link to="/login" className="text-primary font-medium hover:underline">
-                Sign in
+                Se connecter
               </Link>
             </p>
           </div>

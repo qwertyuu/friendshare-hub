@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Package, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
+import { Sparkles, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Login() {
@@ -16,10 +16,10 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
     
-    // Simulate login - will be replaced with real auth
+    // TODO: Remplacer par une vraie authentification
     setTimeout(() => {
       setLoading(false);
-      toast.success("Welcome back!");
+      toast.success("Bienvenue !");
       navigate("/browse");
     }, 1000);
   };
@@ -32,18 +32,18 @@ export default function Login() {
           {/* Logo */}
           <Link to="/" className="inline-flex items-center gap-2 mb-10 group">
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-hero shadow-soft group-hover:shadow-glow transition-shadow duration-300">
-              <Package className="h-5 w-5 text-primary-foreground" />
+              <Sparkles className="h-5 w-5 text-primary-foreground" />
             </div>
             <span className="text-xl font-bold text-foreground">
-              Raphartage<span className="text-primary">Club</span>
+              Le <span className="text-primary">Raphivers</span>
             </span>
           </Link>
 
           <h1 className="text-3xl font-bold text-foreground mb-2">
-            Welcome back
+            Connexion
           </h1>
           <p className="text-muted-foreground mb-8">
-            Sign in to access your club's shared inventory
+            Accède à l'inventaire partagé
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -54,7 +54,7 @@ export default function Login() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder="ton@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="pl-10"
@@ -64,7 +64,7 @@ export default function Login() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Mot de passe</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -84,7 +84,7 @@ export default function Login() {
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 <>
-                  Sign In
+                  Se connecter
                   <ArrowRight className="h-4 w-4" />
                 </>
               )}
@@ -93,9 +93,9 @@ export default function Login() {
 
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
-              Don't have an account?{" "}
+              Pas encore de compte ?{" "}
               <Link to="/register" className="text-primary font-medium hover:underline">
-                Join the club
+                S'inscrire
               </Link>
             </p>
           </div>
@@ -107,10 +107,10 @@ export default function Login() {
         <div className="max-w-md text-center text-primary-foreground">
           <div className="text-6xl mb-6">🤝</div>
           <h2 className="text-3xl font-bold mb-4">
-            Sharing made simple
+            Le partage simplifié
           </h2>
           <p className="text-lg opacity-90">
-            Your friends are waiting. Sign in to see what's available to borrow and share your own items with the club.
+            Retrouve tes amis et découvre ce qu'ils peuvent te prêter.
           </p>
         </div>
       </div>
