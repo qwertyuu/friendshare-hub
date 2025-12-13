@@ -303,4 +303,61 @@ export const requestsController = {
       next(error);
     }
   },
+
+  async cancel(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        throw new UnauthorizedError('Authentication required');
+      }
+
+      const { id } = req.params;
+
+      // Find request
+      const request = await prisma.borrowRequest.findUnique({
+        where: { id },
+        include: { item: true },
+      });
+
+      if (!request) {
+        throw new NotFoundError('Request not found');
+      }
+
+      // Check if user is the requester (only requester can cancel)
+      if (request.requesterId !== req.user.id) {
+        throw new ForbiddenError('You can only cancel your own requests');
+      }
+
+      // Check if request can be cancelled (must be PENDING or APPROVED)
+      if (request.status === 'COMPLETED' || request.status === 'REJECTED' || request.status === 'CANCELLED') {
+        throw new ConflictError('Cannot cancel a request that is already completed, rejected, or cancelled');
+      }
+
+      // Update request
+      const updatedRequest = await prisma.borrowRequest.update({
+        where: { id },
+        data: {
+          status: 'CANCELLED',
+        },
+        include: {
+          item: {
+            include: {
+              owner: {
+                select: { id: true, name: true, email: true },
+              },
+              images: {
+                orderBy: { displayOrder: 'asc' },
+              },
+            },
+          },
+          requester: {
+            select: { id: true, name: true, email: true },
+          },
+        },
+      });
+
+      return res.json({ request: updatedRequest });
+    } catch (error) {
+      next(error);
+    }
+  },
 };

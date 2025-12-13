@@ -25,4 +25,7 @@ router.patch('/:id/reject', requestsController.reject);
 // Complete request
 router.patch('/:id/complete', requestsController.complete);
 
+// Cancel request
+router.patch('/:id/cancel', requestsController.cancel);
+
 export default router;

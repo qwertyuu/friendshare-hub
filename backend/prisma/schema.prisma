@@ -43,6 +43,7 @@ enum RequestStatus {
   APPROVED
   REJECTED
   COMPLETED
+  CANCELLED
 }
 
 model User {

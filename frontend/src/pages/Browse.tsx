@@ -1,28 +1,53 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Header } from "@/components/layout/Header";
 import { Input } from "@/components/ui/input";
 import { Search, Package } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/services/api";
+import { ItemCard } from "@/components/items/ItemCard";
+import { categories } from "@/lib/categories";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 
-const categories = [
+const categoryOptions = [
   { id: "all", emoji: "✨", name: "Tout" },
-  { id: "tools", emoji: "🔧", name: "Outils" },
-  { id: "kitchen", emoji: "🍳", name: "Cuisine" },
-  { id: "sports", emoji: "⚽", name: "Sport" },
-  { id: "electronics", emoji: "💻", name: "Électronique" },
-  { id: "books", emoji: "📚", name: "Livres" },
-  { id: "games", emoji: "🎮", name: "Jeux" },
-  { id: "camping", emoji: "🏕️", name: "Camping" },
-  { id: "other", emoji: "📦", name: "Autre" },
+  { id: "TOOLS", emoji: "🔧", name: "Outils" },
+  { id: "KITCHEN", emoji: "🍳", name: "Cuisine" },
+  { id: "SPORTS", emoji: "⚽", name: "Sport" },
+  { id: "ELECTRONICS", emoji: "💻", name: "Électronique" },
+  { id: "BOOKS", emoji: "📚", name: "Livres" },
+  { id: "GAMES", emoji: "🎮", name: "Jeux" },
+  { id: "CAMPING", emoji: "🏕️", name: "Camping" },
+  { id: "OTHER", emoji: "📦", name: "Autre" },
 ];
 
 export default function Browse() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [page, setPage] = useState(1);
+
+  const { data: itemsData, isLoading } = useQuery({
+    queryKey: ["items", selectedCategory, page],
+    queryFn: async () => {
+      const category = selectedCategory === "all" ? undefined : selectedCategory;
+      return api.getItems(category, "AVAILABLE", page, 20);
+    },
+  });
+
+  // Filter items by search query
+  const filteredItems = useMemo(() => {
+    if (!itemsData?.items) return [];
+    return itemsData.items.filter((item) =>
+      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  }, [itemsData?.items, searchQuery]);
+
+  if (isLoading) return <LoadingSpinner />;
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <main className="container py-8">
         {/* Page Header */}
         <div className="mb-8">
@@ -44,10 +69,13 @@ export default function Browse() {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {categories.map((cat) => (
+            {categoryOptions.map((cat) => (
               <button
                 key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
+                onClick={() => {
+                  setSelectedCategory(cat.id);
+                  setPage(1);
+                }}
                 className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
                   selectedCategory === cat.id
                     ? "bg-primary text-primary-foreground shadow-soft"
@@ -61,14 +89,32 @@ export default function Browse() {
           </div>
         </div>
 
-        {/* Empty State */}
-        <div className="text-center py-16">
-          <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-muted mb-4">
-            <Package className="h-8 w-8 text-muted-foreground" />
+        {/* Items Grid */}
+        {filteredItems.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {filteredItems.map((item) => (
+              <ItemCard
+                key={item.id}
+                item={item}
+                onClick={() => {
+                  // TODO: Open item details dialog
+                }}
+              />
+            ))}
           </div>
-          <h3 className="text-lg font-semibold text-foreground mb-2">Aucun objet pour l'instant</h3>
-          <p className="text-muted-foreground">Les objets de tes amis apparaîtront ici</p>
-        </div>
+        ) : (
+          <div className="text-center py-16">
+            <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-muted mb-4">
+              <Package className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-2">Aucun objet pour l'instant</h3>
+            <p className="text-muted-foreground">
+              {searchQuery
+                ? "Aucun résultat ne correspond à ta recherche"
+                : "Les objets de tes amis apparaîtront ici"}
+            </p>
+          </div>
+        )}
       </main>
     </div>
   );

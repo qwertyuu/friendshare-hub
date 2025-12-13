@@ -1,12 +1,6 @@
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+import { User } from "@/types";
 
-export interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: "USER" | "ADMIN";
-  status: "PENDING" | "APPROVED" | "REJECTED";
-}
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export interface AuthResponse {
   message: string;
@@ -150,7 +144,7 @@ class ApiClient {
   }
 
   async getMyDemands() {
-    return this.request("/api/demands", {
+    return this.request("/api/requests/demands", {
       method: "GET",
     });
   }
@@ -183,6 +177,12 @@ class ApiClient {
 
   async completeRequest(id: string) {
     return this.request(`/api/requests/${id}/complete`, {
+      method: "PATCH",
+    });
+  }
+
+  async cancelRequest(id: string) {
+    return this.request(`/api/requests/${id}/cancel`, {
       method: "PATCH",
     });
   }

@@ -1,11 +1,11 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Menu, X, LogIn, UserPlus } from "lucide-react";
+import { Sparkles, Menu, X, LogIn, UserPlus, LogOut } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 const navLinks = [
   { to: "/browse", label: "Parcourir" },
-  { to: "/demands", label: "Demandes" },
   { to: "/my-items", label: "Mes objets" },
   { to: "/requests", label: "Emprunts" },
 ];
@@ -13,7 +13,18 @@ const navLinks = [
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const isLanding = location.pathname === "/";
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate("/");
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-lg">
@@ -29,7 +40,7 @@ export function Header() {
         </Link>
 
         {/* Desktop Navigation */}
-        {!isLanding && (
+        {!isLanding && user && (
           <nav className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link
@@ -44,12 +55,24 @@ export function Header() {
                 {link.label}
               </Link>
             ))}
+            {user.role === "ADMIN" && (
+              <Link
+                to="/admin"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 ${
+                  location.pathname === "/admin"
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                }`}
+              >
+                Admin
+              </Link>
+            )}
           </nav>
         )}
 
         {/* Auth Buttons */}
         <div className="hidden md:flex items-center gap-3">
-          {isLanding ? (
+          {!user ? (
             <>
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/login">
@@ -65,9 +88,16 @@ export function Header() {
               </Button>
             </>
           ) : (
-            <Button variant="outline" size="sm" asChild>
-              <Link to="/">Déconnexion</Link>
-            </Button>
+            <>
+              <div className="text-sm">
+                <p className="font-medium text-foreground">{user.name}</p>
+                <p className="text-xs text-muted-foreground">{user.email}</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={handleLogout}>
+                <LogOut className="h-4 w-4" />
+                Déconnexion
+              </Button>
+            </>
           )}
         </div>
 
@@ -88,7 +118,7 @@ export function Header() {
       {mobileMenuOpen && (
         <div className="md:hidden border-t border-border bg-card animate-fade-in">
           <nav className="container py-4 flex flex-col gap-2">
-            {!isLanding &&
+            {!isLanding && user &&
               navLinks.map((link) => (
                 <Link
                   key={link.to}
@@ -103,8 +133,21 @@ export function Header() {
                   {link.label}
                 </Link>
               ))}
+            {!isLanding && user && user.role === "ADMIN" && (
+              <Link
+                to="/admin"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                  location.pathname === "/admin"
+                    ? "bg-primary/10 text-primary"
+                    : "text-muted-foreground hover:bg-secondary"
+                }`}
+              >
+                Admin
+              </Link>
+            )}
             <div className="flex gap-2 mt-2 pt-2 border-t border-border">
-              {isLanding ? (
+              {!user ? (
                 <>
                   <Button variant="outline" className="flex-1" asChild>
                     <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
@@ -118,10 +161,12 @@ export function Header() {
                   </Button>
                 </>
               ) : (
-                <Button variant="outline" className="flex-1" asChild>
-                  <Link to="/" onClick={() => setMobileMenuOpen(false)}>
-                    Déconnexion
-                  </Link>
+                <Button variant="outline" className="flex-1" onClick={() => {
+                  handleLogout();
+                  setMobileMenuOpen(false);
+                }}>
+                  <LogOut className="h-4 w-4" />
+                  Déconnexion
                 </Button>
               )}
             </div>

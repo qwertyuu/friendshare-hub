@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Package, Plus, Edit2, Trash2, Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
+import { api } from "@/services/api";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ItemCard } from "@/components/items/ItemCard";
+import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import {
   Dialog,
   DialogContent,
@@ -13,46 +17,133 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Plus, Package, Image } from "lucide-react";
-import { toast } from "sonner";
-
-const categories = [
-  { id: "tools", emoji: "🔧", name: "Outils" },
-  { id: "kitchen", emoji: "🍳", name: "Cuisine" },
-  { id: "sports", emoji: "⚽", name: "Sport" },
-  { id: "electronics", emoji: "💻", name: "Électronique" },
-  { id: "books", emoji: "📚", name: "Livres" },
-  { id: "games", emoji: "🎮", name: "Jeux" },
-  { id: "camping", emoji: "🏕️", name: "Camping" },
-  { id: "other", emoji: "📦", name: "Autre" },
-];
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ItemForm } from "@/components/items/ItemForm";
+import { ImageUpload } from "@/components/items/ImageUpload";
+import { ImageGallery } from "@/components/items/ImageGallery";
+import { Item, ItemCategory } from "@/types";
 
 export default function MyItems() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [newItem, setNewItem] = useState({ title: "", description: "", category: "" });
+  const [editingItem, setEditingItem] = useState<Item | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
-  const handleAddItem = () => {
-    if (!newItem.title || !newItem.category) {
-      toast.error("Remplis les champs obligatoires");
-      return;
+  // Fetch user's items
+  const { data: itemsData, isLoading } = useQuery({
+    queryKey: ["my-items", user?.id],
+    queryFn: async () => {
+      const response = await api.getItems();
+      // Filter to only user's items
+      return response.items.filter((item) => item.ownerId === user?.id);
+    },
+    enabled: !!user?.id,
+  });
+
+  // Create item mutation
+  const createItemMutation = useMutation({
+    mutationFn: async (data: { title: string; description: string; category: ItemCategory }) => {
+      return api.createItem(data.title, data.description, data.category);
+    },
+    onSuccess: async (newItem) => {
+      // Upload images if any
+      if (selectedFiles.length > 0) {
+        try {
+          await api.uploadImages(newItem.id, selectedFiles);
+        } catch (error) {
+          console.error("Image upload failed:", error);
+        }
+      }
+      toast.success("Objet créé avec succès!");
+      setDialogOpen(false);
+      setSelectedFiles([]);
+      queryClient.invalidateQueries({ queryKey: ["my-items"] });
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Erreur lors de la création");
+    },
+  });
+
+  // Update item mutation
+  const updateItemMutation = useMutation({
+    mutationFn: async (data: { title: string; description: string; category: ItemCategory }) => {
+      if (!editingItem) throw new Error("No item selected");
+      return api.updateItem(editingItem.id, data);
+    },
+    onSuccess: async () => {
+      if (selectedFiles.length > 0) {
+        try {
+          await api.uploadImages(editingItem!.id, selectedFiles);
+        } catch (error) {
+          console.error("Image upload failed:", error);
+        }
+      }
+      toast.success("Objet modifié avec succès!");
+      setDialogOpen(false);
+      setEditingItem(null);
+      setSelectedFiles([]);
+      queryClient.invalidateQueries({ queryKey: ["my-items"] });
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Erreur lors de la modification");
+    },
+  });
+
+  // Delete item mutation
+  const deleteItemMutation = useMutation({
+    mutationFn: (id: string) => api.deleteItem(id),
+    onSuccess: () => {
+      toast.success("Objet supprimé avec succès!");
+      setDeleteConfirm(null);
+      queryClient.invalidateQueries({ queryKey: ["my-items"] });
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Erreur lors de la suppression");
+    },
+  });
+
+  // Delete image mutation
+  const deleteImageMutation = useMutation({
+    mutationFn: ({ itemId, imageId }: { itemId: string; imageId: string }) =>
+      api.deleteImage(itemId, imageId),
+    onSuccess: () => {
+      toast.success("Image supprimée!");
+      queryClient.invalidateQueries({ queryKey: ["my-items"] });
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Erreur lors de la suppression");
+    },
+  });
+
+  const handleSubmit = async (data: {
+    title: string;
+    description: string;
+    category: ItemCategory;
+  }) => {
+    if (editingItem) {
+      await updateItemMutation.mutateAsync(data);
+    } else {
+      await createItemMutation.mutateAsync(data);
     }
-    
-    // TODO: Sauvegarder en base
-    setNewItem({ title: "", description: "", category: "" });
-    setDialogOpen(false);
-    toast.success("Objet ajouté !");
   };
+
+  if (isLoading) return <LoadingSpinner />;
+
+  const items = itemsData || [];
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      
+
       <main className="container py-8">
         {/* Page Header */}
         <div className="flex items-center justify-between mb-8">
@@ -60,96 +151,134 @@ export default function MyItems() {
             <h1 className="text-3xl font-bold text-foreground mb-2">Mes objets</h1>
             <p className="text-muted-foreground">Gère les objets que tu peux prêter</p>
           </div>
-          
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+
+          <Dialog
+            open={dialogOpen}
+            onOpenChange={(open) => {
+              setDialogOpen(open);
+              if (!open) {
+                setEditingItem(null);
+                setSelectedFiles([]);
+              }
+            }}
+          >
             <DialogTrigger asChild>
               <Button variant="hero">
                 <Plus className="h-4 w-4" />
                 Ajouter
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>Ajouter un objet</DialogTitle>
+                <DialogTitle>{editingItem ? "Modifier l'objet" : "Ajouter un objet"}</DialogTitle>
                 <DialogDescription>
-                  Ajoute quelque chose que tu peux prêter à tes amis
+                  {editingItem
+                    ? "Mets à jour les informations de cet objet"
+                    : "Ajoute quelque chose que tu peux prêter à tes amis"}
                 </DialogDescription>
               </DialogHeader>
-              
-              <div className="space-y-4 mt-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Nom de l'objet *</Label>
-                  <Input
-                    id="title"
-                    placeholder="Ex: Perceuse sans fil"
-                    value={newItem.title}
-                    onChange={(e) => setNewItem({ ...newItem, title: e.target.value })}
-                  />
+
+              <div className="space-y-6 mt-4">
+                <ItemForm
+                  item={editingItem}
+                  onSubmit={handleSubmit}
+                  isLoading={createItemMutation.isPending || updateItemMutation.isPending}
+                  buttonText={editingItem ? "Modifier l'objet" : "Créer l'objet"}
+                />
+
+                <div className="border-t pt-6">
+                  <ImageUpload onFilesSelected={setSelectedFiles} />
                 </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="category">Catégorie *</Label>
-                  <Select
-                    value={newItem.category}
-                    onValueChange={(value) => setNewItem({ ...newItem, category: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Choisis une catégorie" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {categories.map((cat) => (
-                        <SelectItem key={cat.id} value={cat.id}>
-                          <span className="flex items-center gap-2">
-                            <span>{cat.emoji}</span>
-                            <span>{cat.name}</span>
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Détails supplémentaires..."
-                    value={newItem.description}
-                    onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-                    rows={3}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Photos</Label>
-                  <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors cursor-pointer">
-                    <Image className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                    <p className="text-sm text-muted-foreground">Clique pour ajouter des photos</p>
-                    <p className="text-xs text-muted-foreground mt-1">Jusqu'à 10 images</p>
+
+                {editingItem && editingItem.images.length > 0 && (
+                  <div className="border-t pt-6">
+                    <h3 className="font-semibold mb-4">Photos existantes</h3>
+                    <ImageGallery
+                      images={editingItem.images}
+                      onDelete={async (imageId) => {
+                        await deleteImageMutation.mutateAsync({
+                          itemId: editingItem.id,
+                          imageId,
+                        });
+                      }}
+                      isLoading={deleteImageMutation.isPending}
+                    />
                   </div>
-                </div>
-                
-                <Button onClick={handleAddItem} className="w-full" variant="hero">
-                  Ajouter l'objet
-                </Button>
+                )}
               </div>
             </DialogContent>
           </Dialog>
         </div>
 
-        {/* Empty State */}
-        <div className="text-center py-16">
-          <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-muted mb-4">
-            <Package className="h-8 w-8 text-muted-foreground" />
+        {/* Items Grid or Empty State */}
+        {items.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {items.map((item) => (
+              <div key={item.id} className="relative group">
+                <ItemCard item={item} />
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => {
+                      setEditingItem(item);
+                      setDialogOpen(true);
+                    }}
+                  >
+                    <Edit2 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() => setDeleteConfirm(item.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
-          <h3 className="text-lg font-semibold text-foreground mb-2">Aucun objet</h3>
-          <p className="text-muted-foreground mb-6">Commence par ajouter des choses que tu peux prêter</p>
-          <Button variant="hero" onClick={() => setDialogOpen(true)}>
-            <Plus className="h-4 w-4" />
-            Ajouter mon premier objet
-          </Button>
-        </div>
+        ) : (
+          <div className="text-center py-16">
+            <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-muted mb-4">
+              <Package className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-2">Aucun objet</h3>
+            <p className="text-muted-foreground mb-6">Commence par ajouter des choses que tu peux prêter</p>
+            <Button variant="hero" onClick={() => setDialogOpen(true)}>
+              <Plus className="h-4 w-4" />
+              Ajouter mon premier objet
+            </Button>
+          </div>
+        )}
       </main>
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={deleteConfirm !== null} onOpenChange={() => setDeleteConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer l'objet</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action ne peut pas être annulée. L'objet sera supprimé définitivement.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex gap-2 justify-end">
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (deleteConfirm) {
+                  deleteItemMutation.mutate(deleteConfirm);
+                }
+              }}
+              disabled={deleteItemMutation.isPending}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {deleteItemMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Supprimer
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
