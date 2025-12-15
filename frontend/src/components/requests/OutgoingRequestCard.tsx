@@ -69,7 +69,7 @@ export function OutgoingRequestCard({
       {/* Owner info */}
       <div className="flex items-center gap-2 text-sm text-muted-foreground border-t pt-2">
         <User className="h-4 w-4" />
-        <span>Propriétaire: {request.owner.name}</span>
+        <span>Propriétaire: {request.item.owner.name}</span>
       </div>
 
       {/* Dates */}
