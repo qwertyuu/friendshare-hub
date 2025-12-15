@@ -38,8 +38,8 @@ COPY backend/package*.json ./backend/
 RUN npm install --only=production && npm install --prefix backend --only=production
 
 # Copy prisma from builder
-COPY --from=builder /app/backend/node_modules/.prisma ./backend/node_modules/.prisma
-COPY --from=builder /app/backend/node_modules/@prisma ./backend/node_modules/@prisma
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
 # Copy prisma schema and migrations
 COPY backend/prisma ./backend/prisma
