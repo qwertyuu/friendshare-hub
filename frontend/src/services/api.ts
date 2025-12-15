@@ -273,8 +273,21 @@ class ApiClient {
     });
   }
 
-  async rejectUser(id: string) {
+  async rejectUser(id: string, reason?: string) {
     return this.request(`/api/admin/users/${id}/reject`, {
+      method: "PATCH",
+      body: reason ? JSON.stringify({ reason }) : undefined,
+    });
+  }
+
+  async promoteUser(id: string) {
+    return this.request(`/api/admin/users/${id}/promote`, {
+      method: "PATCH",
+    });
+  }
+
+  async demoteUser(id: string) {
+    return this.request(`/api/admin/users/${id}/demote`, {
       method: "PATCH",
     });
   }

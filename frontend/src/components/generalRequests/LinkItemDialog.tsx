@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/services/api";
+import { useOptimisticUpdate } from "@/utils/mutations";
 import {
   Dialog,
   DialogContent,
@@ -34,6 +35,7 @@ interface ItemData {
 export function LinkItemDialog({ open, onOpenChange, requestId }: LinkItemDialogProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { invalidateQueries } = useOptimisticUpdate();
   const [selectedItemId, setSelectedItemId] = useState("");
   const [message, setMessage] = useState("");
 
@@ -55,7 +57,7 @@ export function LinkItemDialog({ open, onOpenChange, requestId }: LinkItemDialog
       onOpenChange(false);
       setSelectedItemId("");
       setMessage("");
-      queryClient.invalidateQueries({ queryKey: ["general-requests"] });
+      invalidateQueries([["general-requests"]]);
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : "Erreur");

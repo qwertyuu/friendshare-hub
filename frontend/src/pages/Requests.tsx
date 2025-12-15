@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Inbox, Send, Loader2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/services/api";
+import { useOptimisticUpdate } from "@/utils/mutations";
 import { OutgoingRequestCard } from "@/components/requests/OutgoingRequestCard";
 import { IncomingRequestCard } from "@/components/requests/IncomingRequestCard";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
@@ -21,6 +22,7 @@ import { useState } from "react";
 
 export default function Requests() {
   const queryClient = useQueryClient();
+  const { updateRequestStatus, removeRequest, invalidateQueries } = useOptimisticUpdate();
   const [approveDialogOpen, setApproveDialogOpen] = useState<string | null>(null);
   const [rejectDialogOpen, setRejectDialogOpen] = useState<string | null>(null);
   const [responseMessage, setResponseMessage] = useState("");
@@ -46,9 +48,10 @@ export default function Requests() {
   // Cancel request mutation
   const cancelRequestMutation = useMutation({
     mutationFn: (id: string) => api.cancelRequest(id),
-    onSuccess: () => {
+    onSuccess: (_, requestId) => {
       toast.success("Demande annulée!");
-      queryClient.invalidateQueries({ queryKey: ["requests-outgoing"] });
+      removeRequest(requestId, [["requests-outgoing"]]);
+      invalidateQueries([["requests-outgoing"]]);
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : "Erreur lors de l'annulation");
@@ -58,11 +61,10 @@ export default function Requests() {
   // Complete request mutation
   const completeRequestMutation = useMutation({
     mutationFn: (id: string) => api.completeRequest(id),
-    onSuccess: () => {
+    onSuccess: (_, requestId) => {
       toast.success("Demande marquée comme complétée!");
-      queryClient.invalidateQueries({
-        queryKey: ["requests-outgoing", "requests-incoming"],
-      });
+      removeRequest(requestId, [["requests-outgoing"], ["requests-incoming"]]);
+      invalidateQueries([["requests-outgoing"], ["requests-incoming"]]);
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : "Erreur lors de la mise à jour");
@@ -73,11 +75,12 @@ export default function Requests() {
   const approveRequestMutation = useMutation({
     mutationFn: (data: { id: string; responseMessage?: string }) =>
       api.approveRequest(data.id, data.responseMessage),
-    onSuccess: () => {
+    onSuccess: (_, data) => {
       toast.success("Demande approuvée!");
+      updateRequestStatus(data.id, "APPROVED", ["requests-incoming"]);
+      invalidateQueries([["requests-incoming"]]);
       setApproveDialogOpen(null);
       setResponseMessage("");
-      queryClient.invalidateQueries({ queryKey: ["requests-incoming"] });
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : "Erreur lors de l'approbation");
@@ -88,11 +91,12 @@ export default function Requests() {
   const rejectRequestMutation = useMutation({
     mutationFn: (data: { id: string; responseMessage?: string }) =>
       api.rejectRequest(data.id, data.responseMessage),
-    onSuccess: () => {
+    onSuccess: (_, data) => {
       toast.success("Demande rejetée!");
+      updateRequestStatus(data.id, "REJECTED", ["requests-incoming"]);
+      invalidateQueries([["requests-incoming"]]);
       setRejectDialogOpen(null);
       setResponseMessage("");
-      queryClient.invalidateQueries({ queryKey: ["requests-incoming"] });
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : "Erreur lors du rejet");

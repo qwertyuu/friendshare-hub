@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { api } from "@/services/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useOptimisticUpdate } from "@/utils/mutations";
 import { ItemCard } from "@/components/items/ItemCard";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import {
@@ -33,6 +34,7 @@ import { Item, ItemCategory } from "@/types";
 export default function MyItems() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { invalidateQueries } = useOptimisticUpdate();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
@@ -120,9 +122,19 @@ export default function MyItems() {
   const deleteImageMutation = useMutation({
     mutationFn: ({ itemId, imageId }: { itemId: string; imageId: string }) =>
       api.deleteImage(itemId, imageId),
-    onSuccess: () => {
+    onSuccess: async (_, { itemId }) => {
       toast.success("Image supprimée!");
-      queryClient.invalidateQueries({ queryKey: ["my-items"] });
+      invalidateQueries([["my-items"]]);
+      // Refetch the editing item to update the images list in the UI
+      if (editingItem) {
+        try {
+          const response = await api.getItemById(itemId);
+          const updatedItem = response.item || response;
+          setEditingItem(updatedItem);
+        } catch (error) {
+          console.error("Failed to refetch item after image deletion:", error);
+        }
+      }
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : "Erreur lors de la suppression");

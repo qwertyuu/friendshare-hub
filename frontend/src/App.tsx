@@ -12,7 +12,7 @@ import Browse from "./pages/Browse";
 import MyItems from "./pages/MyItems";
 import Requests from "./pages/Requests";
 import GeneralRequests from "./pages/GeneralRequests";
-import Demands from "./pages/Demands";
+import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -60,7 +60,7 @@ const App = () => (
                 </ProtectedRoute>
               }
             />
-            <Route path="/admin" element={<Demands />} />
+            <Route path="/admin" element={<Admin />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

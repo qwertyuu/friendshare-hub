@@ -12,7 +12,9 @@
       "mcp__playwright__browser_navigate_back",
       "mcp__playwright__browser_fill_form",
       "mcp__playwright__browser_press_key",
-      "mcp__playwright__browser_navigate"
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_type",
+      "mcp__playwright__browser_resize"
     ]
   }
 }

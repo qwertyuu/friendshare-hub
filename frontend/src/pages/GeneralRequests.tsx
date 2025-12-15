@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, MessageSquare, Loader2 } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/services/api";
+import { useOptimisticUpdate } from "@/utils/mutations";
 import { GeneralRequestCard } from "@/components/generalRequests/GeneralRequestCard";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { toast } from "sonner";
@@ -28,6 +29,7 @@ import {
 export default function GeneralRequests() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { updateRequestStatus, invalidateQueries } = useOptimisticUpdate();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState("OPEN");
 
@@ -51,7 +53,7 @@ export default function GeneralRequests() {
     onSuccess: () => {
       toast.success("Demande créée avec succès!");
       setDialogOpen(false);
-      queryClient.invalidateQueries({ queryKey: ["general-requests"] });
+      invalidateQueries([["general-requests", statusFilter]]);
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : "Erreur lors de la création");
@@ -61,9 +63,10 @@ export default function GeneralRequests() {
   // Cancel mutation
   const cancelMutation = useMutation({
     mutationFn: (id: string) => api.cancelGeneralRequest(id),
-    onSuccess: () => {
+    onSuccess: (_, requestId) => {
       toast.success("Demande annulée!");
-      queryClient.invalidateQueries({ queryKey: ["general-requests"] });
+      updateRequestStatus(requestId, "CANCELLED", ["general-requests", statusFilter]);
+      invalidateQueries([["general-requests", statusFilter]]);
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : "Erreur");
@@ -73,9 +76,10 @@ export default function GeneralRequests() {
   // Fulfill mutation
   const fulfillMutation = useMutation({
     mutationFn: (id: string) => api.fulfillGeneralRequest(id),
-    onSuccess: () => {
+    onSuccess: (_, requestId) => {
       toast.success("Demande marquée comme satisfaite!");
-      queryClient.invalidateQueries({ queryKey: ["general-requests"] });
+      updateRequestStatus(requestId, "FULFILLED", ["general-requests", statusFilter]);
+      invalidateQueries([["general-requests", statusFilter]]);
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : "Erreur");

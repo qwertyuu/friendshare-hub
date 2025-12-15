@@ -17,4 +17,10 @@ router.patch('/users/:id/approve', adminController.approveUser);
 // Reject user
 router.patch('/users/:id/reject', adminController.rejectUser);
 
+// Promote user to admin
+router.patch('/users/:id/promote', adminController.promoteUser);
+
+// Demote user from admin
+router.patch('/users/:id/demote', adminController.demoteUser);
+
 export default router;

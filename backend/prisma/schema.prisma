@@ -53,14 +53,15 @@ enum GeneralRequestStatus {
 }
 
 model User {
-  id            String          @id @default(uuid())
-  email         String          @unique
-  passwordHash  String          @map("password_hash")
-  name          String
-  role          UserRole        @default(USER)
-  status        UserStatus      @default(PENDING)
-  createdAt     DateTime        @default(now()) @map("created_at")
-  updatedAt     DateTime        @updatedAt @map("updated_at")
+  id                String          @id @default(uuid())
+  email             String          @unique
+  passwordHash      String          @map("password_hash")
+  name              String
+  role              UserRole        @default(USER)
+  status            UserStatus      @default(PENDING)
+  rejectionReason   String?         @map("rejection_reason")
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
 
   // Relations
   items                       Item[]

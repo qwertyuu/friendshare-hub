@@ -7,7 +7,11 @@ export const auth = (req: Request, res: Response, next: NextFunction) => {
     const token = req.cookies.token;
 
     if (!token) {
-      throw new UnauthorizedError('No authentication token provided');
+      return res.status(401).json({
+        error: 'Unauthorized',
+        code: 'NO_TOKEN',
+        message: 'No authentication token provided',
+      });
     }
 
     const decoded = authService.verifyToken(token);
@@ -30,9 +34,9 @@ export const auth = (req: Request, res: Response, next: NextFunction) => {
       });
     }
 
-    res.status(401).json({
+    return res.status(401).json({
       error: 'Unauthorized',
-      code: 'UNAUTHORIZED',
+      code: 'INVALID_TOKEN',
       message: 'Invalid or expired token',
     });
   }

@@ -2,16 +2,18 @@ import { User } from "@/types";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Mail, Check, X } from "lucide-react";
+import { Mail, Check, X, Loader2, Crown, Shield } from "lucide-react";
 
 interface UserCardProps {
   user: User;
   onApprove?: (id: string) => Promise<void>;
   onReject?: (id: string) => Promise<void>;
+  onPromote?: (id: string) => Promise<void>;
+  onDemote?: (id: string) => Promise<void>;
   isLoading?: boolean;
 }
 
-export function UserCard({ user, onApprove, onReject, isLoading = false }: UserCardProps) {
+export function UserCard({ user, onApprove, onReject, onPromote, onDemote, isLoading = false }: UserCardProps) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "PENDING":
@@ -58,6 +60,9 @@ export function UserCard({ user, onApprove, onReject, isLoading = false }: UserC
       <div className="text-sm text-muted-foreground border-t pt-2 space-y-1">
         <p>Rôle: <span className="font-medium text-foreground">{user.role === "ADMIN" ? "Administrateur" : "Utilisateur"}</span></p>
         <p>ID: <span className="font-mono text-xs">{user.id}</span></p>
+        {user.status === "REJECTED" && user.rejectionReason && (
+          <p className="text-red-600 dark:text-red-400">Raison: <span className="font-medium">{user.rejectionReason}</span></p>
+        )}
       </div>
 
       {/* Actions */}
@@ -70,7 +75,11 @@ export function UserCard({ user, onApprove, onReject, isLoading = false }: UserC
             disabled={isLoading}
             className="flex-1 gap-1"
           >
-            <X className="h-4 w-4" />
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <X className="h-4 w-4" />
+            )}
             Refuser
           </Button>
           <Button
@@ -79,9 +88,50 @@ export function UserCard({ user, onApprove, onReject, isLoading = false }: UserC
             disabled={isLoading}
             className="flex-1 gap-1"
           >
-            <Check className="h-4 w-4" />
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Check className="h-4 w-4" />
+            )}
             Approuver
           </Button>
+        </div>
+      )}
+
+      {/* Role Management Actions */}
+      {user.status === "APPROVED" && (
+        <div className="flex gap-2 border-t pt-4">
+          {user.role === "USER" ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onPromote?.(user.id)}
+              disabled={isLoading}
+              className="flex-1 gap-1"
+            >
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Crown className="h-4 w-4" />
+              )}
+              Promouvoir
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onDemote?.(user.id)}
+              disabled={isLoading}
+              className="flex-1 gap-1"
+            >
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Shield className="h-4 w-4" />
+              )}
+              Rétrograder
+            </Button>
+          )}
         </div>
       )}
     </Card>

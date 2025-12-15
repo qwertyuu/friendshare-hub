@@ -1,15 +1,16 @@
 import { Header } from "@/components/layout/Header";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, CheckCircle, XCircle, Clock } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@/services/api";
 import { UserCard } from "@/components/admin/UserCard";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { ProtectedRoute } from "@/components/common/ProtectedRoute";
 import { toast } from "sonner";
+import { useOptimisticUpdate } from "@/utils/mutations";
 
 export default function Admin() {
-  const queryClient = useQueryClient();
+  const { updateUserRole, invalidateQueries } = useOptimisticUpdate();
 
   // Fetch pending users
   const { data: pendingData, isLoading: pendingLoading } = useQuery({
@@ -43,9 +44,7 @@ export default function Admin() {
     mutationFn: (id: string) => api.approveUser(id),
     onSuccess: () => {
       toast.success("Utilisateur approuvé!");
-      queryClient.invalidateQueries({
-        queryKey: ["admin-users-pending", "admin-users-approved"],
-      });
+      invalidateQueries([["admin-users-pending"], ["admin-users-approved"]]);
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : "Erreur lors de l'approbation");
@@ -57,12 +56,44 @@ export default function Admin() {
     mutationFn: (id: string) => api.rejectUser(id),
     onSuccess: () => {
       toast.success("Utilisateur rejeté!");
-      queryClient.invalidateQueries({
-        queryKey: ["admin-users-pending", "admin-users-rejected"],
-      });
+      invalidateQueries([["admin-users-pending"], ["admin-users-rejected"]]);
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : "Erreur lors du rejet");
+    },
+  });
+
+  // Promote user to admin mutation
+  const promoteUserMutation = useMutation({
+    mutationFn: (id: string) => api.promoteUser(id),
+    onSuccess: (_, userId) => {
+      toast.success("Utilisateur promu administrateur!");
+      updateUserRole(userId, "ADMIN", ["admin-users-approved"]);
+      invalidateQueries([
+        ["admin-users-pending"],
+        ["admin-users-approved"],
+        ["admin-users-rejected"],
+      ]);
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Erreur lors de la promotion");
+    },
+  });
+
+  // Demote user from admin mutation
+  const demoteUserMutation = useMutation({
+    mutationFn: (id: string) => api.demoteUser(id),
+    onSuccess: (_, userId) => {
+      toast.success("Utilisateur rétrogradé!");
+      updateUserRole(userId, "USER", ["admin-users-approved"]);
+      invalidateQueries([
+        ["admin-users-pending"],
+        ["admin-users-approved"],
+        ["admin-users-rejected"],
+      ]);
+    },
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Erreur lors de la rétrogradation");
     },
   });
 
@@ -161,7 +192,13 @@ export default function Admin() {
               {approvedUsers.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {approvedUsers.map((user) => (
-                    <UserCard key={user.id} user={user} />
+                    <UserCard
+                      key={user.id}
+                      user={user}
+                      onPromote={(id) => promoteUserMutation.mutate(id)}
+                      onDemote={(id) => demoteUserMutation.mutate(id)}
+                      isLoading={promoteUserMutation.isPending || demoteUserMutation.isPending}
+                    />
                   ))}
                 </div>
               ) : (

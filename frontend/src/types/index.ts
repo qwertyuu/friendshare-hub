@@ -20,6 +20,7 @@ export interface User {
   name: string;
   role: UserRole;
   status: UserStatus;
+  rejectionReason?: string | null;
 }
 
 export interface Item {

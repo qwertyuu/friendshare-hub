@@ -24,7 +24,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const response = await api.getCurrentUser();
         setUser(response.user);
-      } catch {
+      } catch (err) {
+        // Silently fail - no token means not logged in
         setUser(null);
       } finally {
         setLoading(false);
