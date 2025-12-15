@@ -47,7 +47,7 @@ export function ItemCard({ item, onClick }: ItemCardProps) {
       <div className="relative h-40 bg-muted overflow-hidden">
         {item.images && item.images.length > 0 ? (
           <img
-            src={`${API_URL}${item.images[0].filePath}`}
+            src={`${API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL}/uploads/${item.images[0].filePath}`}
             alt={item.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />

@@ -23,6 +23,14 @@ interface LinkItemDialogProps {
   requestId: string;
 }
 
+interface ItemData {
+  id: string;
+  ownerId: string;
+  title: string;
+  description?: string;
+  category: string;
+}
+
 export function LinkItemDialog({ open, onOpenChange, requestId }: LinkItemDialogProps) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -34,7 +42,7 @@ export function LinkItemDialog({ open, onOpenChange, requestId }: LinkItemDialog
     queryKey: ["my-items", user?.id],
     queryFn: async () => {
       const response = await api.getItems();
-      return (response.items || []).filter((item: any) => item.ownerId === user?.id);
+      return (response.items || []).filter((item: ItemData) => item.ownerId === user?.id);
     },
     enabled: open && !!user?.id,
   });
@@ -84,7 +92,7 @@ export function LinkItemDialog({ open, onOpenChange, requestId }: LinkItemDialog
             <div className="space-y-2">
               <Label>Choisis un objet</Label>
               <RadioGroup value={selectedItemId} onValueChange={setSelectedItemId}>
-                {items.map((item: any) => (
+                {items.map((item: ItemData) => (
                   <div key={item.id} className="flex items-center space-x-3 border rounded-lg p-3">
                     <RadioGroupItem value={item.id} id={item.id} />
                     <label

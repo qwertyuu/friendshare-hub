@@ -37,10 +37,16 @@ export function ImageGallery({ images, onDelete, isLoading = false }: ImageGalle
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-      {images.map((image) => (
+      {images.map((image) => {
+        // Construct image URL - ensure proper formatting
+        const filePath = image.filePath.replace(/\\/g, '/'); // Convert backslashes to forward slashes
+        const baseUrl = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
+        const imageUrl = `${baseUrl}/uploads/${filePath}`;
+
+        return (
         <div key={image.id} className="relative group">
           <img
-            src={`${API_URL}${image.filePath}`}
+            src={imageUrl}
             alt="Item image"
             className="w-full h-32 object-cover rounded-lg"
           />
@@ -65,7 +71,8 @@ export function ImageGallery({ images, onDelete, isLoading = false }: ImageGalle
             {image.displayOrder + 1}
           </span>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

@@ -54,13 +54,17 @@ export default function MyItems() {
     mutationFn: async (data: { title: string; description: string; category: ItemCategory }) => {
       return api.createItem(data.title, data.description, data.category);
     },
-    onSuccess: async (newItem) => {
+    onSuccess: async (response) => {
+      // Extract item from response (backend returns {item: {...}})
+      const newItem = response.item || response;
+
       // Upload images if any
       if (selectedFiles.length > 0) {
         try {
           await api.uploadImages(newItem.id, selectedFiles);
         } catch (error) {
           console.error("Image upload failed:", error);
+          toast.error("Objet créé mais erreur lors de l'upload des images");
         }
       }
       toast.success("Objet créé avec succès!");
@@ -80,11 +84,12 @@ export default function MyItems() {
       return api.updateItem(editingItem.id, data);
     },
     onSuccess: async () => {
-      if (selectedFiles.length > 0) {
+      if (selectedFiles.length > 0 && editingItem) {
         try {
-          await api.uploadImages(editingItem!.id, selectedFiles);
+          await api.uploadImages(editingItem.id, selectedFiles);
         } catch (error) {
           console.error("Image upload failed:", error);
+          toast.error("Objet modifié mais erreur lors de l'upload des images");
         }
       }
       toast.success("Objet modifié avec succès!");

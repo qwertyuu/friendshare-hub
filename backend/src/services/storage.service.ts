@@ -15,7 +15,8 @@ export const storageService = {
       await fs.writeFile(filePath, file.buffer);
       logger.info(`File saved: ${filePath}`);
 
-      return path.join('items', itemId, filename);
+      // Return path with forward slashes for URL compatibility
+      return path.join('items', itemId, filename).replace(/\\/g, '/');
     } catch (error) {
       logger.error('Error saving file:', error);
       throw error;

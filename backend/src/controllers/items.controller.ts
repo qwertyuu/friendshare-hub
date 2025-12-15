@@ -1,6 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../config/database.js';
 import { NotFoundError, ForbiddenError, UnauthorizedError } from '../utils/errors.js';
+import { storageService } from '../services/storage.service.js';
+
+// Helper to add image URLs
+const formatItem = (item: any) => {
+  return {
+    ...item,
+    images: item.images.map((img: any) => ({
+      ...img,
+      url: storageService.getFileUrl(img.filePath),
+    })),
+  };
+};
 
 export const itemsController = {
   async list(req: Request, res: Response, next: NextFunction) {
@@ -43,7 +55,7 @@ export const itemsController = {
       const pages = Math.ceil(total / limitNum);
 
       return res.json({
-        items,
+        items: items.map(formatItem),
         pagination: {
           total,
           page: pageNum,
@@ -80,7 +92,7 @@ export const itemsController = {
         throw new NotFoundError('Item not found');
       }
 
-      return res.json({ item });
+      return res.json({ item: formatItem(item) });
     } catch (error) {
       next(error);
     }
@@ -105,10 +117,13 @@ export const itemsController = {
           owner: {
             select: { id: true, name: true, email: true },
           },
+          images: {
+            orderBy: { displayOrder: 'asc' },
+          },
         },
       });
 
-      return res.status(201).json({ item });
+      return res.status(201).json({ item: formatItem(item) });
     } catch (error) {
       next(error);
     }
@@ -154,7 +169,7 @@ export const itemsController = {
         },
       });
 
-      return res.json({ item: updatedItem });
+      return res.json({ item: formatItem(updatedItem) });
     } catch (error) {
       next(error);
     }
