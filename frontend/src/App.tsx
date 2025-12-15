@@ -11,6 +11,7 @@ import Register from "./pages/Register";
 import Browse from "./pages/Browse";
 import MyItems from "./pages/MyItems";
 import Requests from "./pages/Requests";
+import GeneralRequests from "./pages/GeneralRequests";
 import Demands from "./pages/Demands";
 import NotFound from "./pages/NotFound";
 
@@ -48,6 +49,14 @@ const App = () => (
               element={
                 <ProtectedRoute>
                   <Requests />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/general-requests"
+              element={
+                <ProtectedRoute>
+                  <GeneralRequests />
                 </ProtectedRoute>
               }
             />

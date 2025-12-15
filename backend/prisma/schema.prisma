@@ -46,6 +46,12 @@ enum RequestStatus {
   CANCELLED
 }
 
+enum GeneralRequestStatus {
+  OPEN
+  FULFILLED
+  CANCELLED
+}
+
 model User {
   id            String          @id @default(uuid())
   email         String          @unique
@@ -57,9 +63,11 @@ model User {
   updatedAt     DateTime        @updatedAt @map("updated_at")
 
   // Relations
-  items         Item[]
-  requests      BorrowRequest[] @relation("Requester")
-  demands       BorrowRequest[] @relation("Owner")
+  items                       Item[]
+  requests                    BorrowRequest[] @relation("Requester")
+  demands                     BorrowRequest[] @relation("Owner")
+  generalRequests             GeneralRequest[] @relation("GeneralRequester")
+  generalRequestResponses     GeneralRequestResponse[] @relation("GeneralResponder")
 
   @@map("users")
 }
@@ -75,9 +83,10 @@ model Item {
   updatedAt   DateTime     @updatedAt @map("updated_at")
 
   // Relations
-  owner       User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  images      ItemImage[]
-  requests    BorrowRequest[]
+  owner                       User                          @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  images                      ItemImage[]
+  requests                    BorrowRequest[]
+  generalRequestResponses     GeneralRequestResponse[]
 
   @@index([ownerId])
   @@index([category])
@@ -125,4 +134,44 @@ model BorrowRequest {
   @@index([ownerId])
   @@index([status])
   @@map("borrow_requests")
+}
+
+model GeneralRequest {
+  id          String                    @id @default(uuid())
+  requesterId String                    @map("requester_id")
+  title       String
+  description String?
+  startDate   DateTime?                 @map("start_date")
+  endDate     DateTime?                 @map("end_date")
+  status      GeneralRequestStatus      @default(OPEN)
+  createdAt   DateTime                  @default(now()) @map("created_at")
+  updatedAt   DateTime                  @updatedAt @map("updated_at")
+
+  // Relations
+  requester   User                      @relation("GeneralRequester", fields: [requesterId], references: [id], onDelete: Cascade)
+  responses   GeneralRequestResponse[]
+
+  @@index([requesterId])
+  @@index([status])
+  @@index([createdAt])
+  @@map("general_requests")
+}
+
+model GeneralRequestResponse {
+  id               String          @id @default(uuid())
+  generalRequestId String          @map("general_request_id")
+  responderId      String          @map("responder_id")
+  itemId           String?         @map("item_id")
+  message          String?
+  createdAt        DateTime        @default(now()) @map("created_at")
+
+  // Relations
+  generalRequest   GeneralRequest  @relation(fields: [generalRequestId], references: [id], onDelete: Cascade)
+  responder        User            @relation("GeneralResponder", fields: [responderId], references: [id], onDelete: Cascade)
+  item             Item?           @relation(fields: [itemId], references: [id], onDelete: SetNull)
+
+  @@index([generalRequestId])
+  @@index([responderId])
+  @@index([itemId])
+  @@map("general_request_responses")
 }

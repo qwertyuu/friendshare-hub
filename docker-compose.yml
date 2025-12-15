@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: raphartage_postgres
+    environment:
+      POSTGRES_USER: ${DB_USER:-raphartage}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-raphartage_password}
+      POSTGRES_DB: ${DB_NAME:-raphartage_club}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-raphartage}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - raphartage_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: raphartage_backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: ${NODE_ENV:-production}
+      PORT: 3000
+      DATABASE_URL: postgresql://${DB_USER:-raphartage}:${DB_PASSWORD:-raphartage_password}@postgres:5432/${DB_NAME:-raphartage_club}
+      JWT_SECRET: ${JWT_SECRET:-change-me-to-random-string-min-32-characters}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-10}
+      UPLOAD_DIR: ${UPLOAD_DIR:-./uploads}
+      MAX_FILE_SIZE: ${MAX_FILE_SIZE:-5242880}
+      MAX_FILES_PER_ITEM: ${MAX_FILES_PER_ITEM:-10}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:3000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./backend/uploads:/app/uploads
+    networks:
+      - raphartage_network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: raphartage_frontend
+    depends_on:
+      - backend
+    environment:
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:3000}
+    ports:
+      - "80:80"
+    networks:
+      - raphartage_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  raphartage_network:
+    driver: bridge

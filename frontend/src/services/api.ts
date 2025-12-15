@@ -187,6 +187,77 @@ class ApiClient {
     });
   }
 
+  // General request endpoints
+  async getGeneralRequests(status?: string, page: number = 1, limit: number = 20) {
+    const params = new URLSearchParams();
+    if (status && status !== "all") params.append("status", status);
+    params.append("page", page.toString());
+    params.append("limit", limit.toString());
+
+    return this.request(`/api/general-requests?${params.toString()}`, {
+      method: "GET",
+    });
+  }
+
+  async getMyGeneralRequests() {
+    return this.request("/api/general-requests/mine", {
+      method: "GET",
+    });
+  }
+
+  async createGeneralRequest(
+    title: string,
+    description?: string,
+    startDate?: string,
+    endDate?: string
+  ) {
+    return this.request("/api/general-requests", {
+      method: "POST",
+      body: JSON.stringify({ title, description, startDate, endDate }),
+    });
+  }
+
+  async updateGeneralRequest(
+    id: string,
+    data: { title?: string; description?: string; startDate?: string; endDate?: string }
+  ) {
+    return this.request(`/api/general-requests/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async fulfillGeneralRequest(id: string) {
+    return this.request(`/api/general-requests/${id}/fulfill`, {
+      method: "PATCH",
+    });
+  }
+
+  async cancelGeneralRequest(id: string) {
+    return this.request(`/api/general-requests/${id}/cancel`, {
+      method: "PATCH",
+    });
+  }
+
+  async deleteGeneralRequest(id: string) {
+    return this.request(`/api/general-requests/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  async respondToGeneralRequest(requestId: string, itemId: string, message?: string) {
+    return this.request(`/api/general-requests/${requestId}/responses`, {
+      method: "POST",
+      body: JSON.stringify({ itemId, message }),
+    });
+  }
+
+  async deleteGeneralRequestResponse(responseId: string) {
+    return this.request(`/api/general-requests/responses/${responseId}`, {
+      method: "DELETE",
+    });
+  }
+
   // Admin endpoints
   async getUsers(status?: string) {
     const params = new URLSearchParams();

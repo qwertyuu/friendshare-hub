@@ -10,6 +10,7 @@ export type ItemCategory =
 
 export type ItemStatus = "AVAILABLE" | "BORROWED" | "UNAVAILABLE";
 export type RequestStatus = "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED";
+export type GeneralRequestStatus = "OPEN" | "FULFILLED" | "CANCELLED";
 export type UserStatus = "PENDING" | "APPROVED" | "REJECTED";
 export type UserRole = "USER" | "ADMIN";
 
@@ -72,4 +73,37 @@ export interface BorrowRequest {
     name: string;
     email: string;
   };
+}
+
+export interface GeneralRequest {
+  id: string;
+  requesterId: string;
+  title: string;
+  description: string | null;
+  startDate: string | null;
+  endDate: string | null;
+  status: GeneralRequestStatus;
+  createdAt: string;
+  updatedAt: string;
+  requester: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  responses: GeneralRequestResponse[];
+}
+
+export interface GeneralRequestResponse {
+  id: string;
+  generalRequestId: string;
+  responderId: string;
+  itemId: string | null;
+  message: string | null;
+  createdAt: string;
+  responder: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  item?: Item;
 }

@@ -11,6 +11,7 @@ import authRouter from './routes/auth.routes.js';
 import itemsRouter from './routes/items.routes.js';
 import imagesRouter from './routes/images.routes.js';
 import requestsRouter from './routes/requests.routes.js';
+import generalRequestsRouter from './routes/generalRequests.routes.js';
 import adminRouter from './routes/admin.routes.js';
 
 const app: Express = express();
@@ -59,6 +60,7 @@ app.use('/uploads', express.static(env.UPLOAD_DIR));
 app.use('/api/auth', authLimiter, authRouter);
 app.use('/api/items', itemsRouter);
 app.use('/api/requests', requestsRouter);
+app.use('/api/general-requests', generalRequestsRouter);
 app.use('/api/admin', adminRouter);
 
 // Health check

@@ -8,6 +8,7 @@ const navLinks = [
   { to: "/browse", label: "Parcourir" },
   { to: "/my-items", label: "Mes objets" },
   { to: "/requests", label: "Emprunts" },
+  { to: "/general-requests", label: "Demandes" },
 ];
 
 export function Header() {
