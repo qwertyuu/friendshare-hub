@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Menu, X, LogIn, UserPlus, LogOut } from "lucide-react";
+import { Sparkles, Menu, X, LogIn, UserPlus, LogOut, Info } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -76,6 +76,12 @@ export function Header() {
           {!user ? (
             <>
               <Button variant="ghost" size="sm" asChild>
+                <Link to="/info">
+                  <Info className="h-4 w-4" />
+                  À propos
+                </Link>
+              </Button>
+              <Button variant="ghost" size="sm" asChild>
                 <Link to="/login">
                   <LogIn className="h-4 w-4" />
                   Connexion
@@ -145,6 +151,16 @@ export function Header() {
                 }`}
               >
                 Admin
+              </Link>
+            )}
+            {!user && (
+              <Link
+                to="/info"
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-4 py-3 rounded-lg text-sm font-medium transition-colors text-muted-foreground hover:bg-secondary"
+              >
+                <Info className="h-4 w-4 inline mr-2" />
+                À propos
               </Link>
             )}
             <div className="flex gap-2 mt-2 pt-2 border-t border-border">
