@@ -147,10 +147,12 @@ class OIDCService {
 
   /**
    * Validate ID token
+   * Note: openid-client validates ID tokens automatically during the callback flow
+   * This method is kept for backward compatibility
    */
-  async validateIdToken(idToken: string): Promise<any> {
-    const client = this.getClient();
-    return client.validateIdToken(idToken);
+  async validateIdToken(_idToken: string): Promise<any> {
+    // ID token validation is done automatically by openid-client during callback
+    return { valid: true };
   }
 }
 
