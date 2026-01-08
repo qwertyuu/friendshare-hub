@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client';
-import bcrypt from 'bcrypt';
 import { env } from '../src/config/env.js';
 
 const prisma = new PrismaClient();
@@ -8,30 +7,52 @@ async function main() {
   console.log('Seeding database...');
 
   // Create admin user
-  const adminPasswordHash = await bcrypt.hash('password123', 10);
   const admin = await prisma.user.upsert({
     where: { email: env.ADMIN_EMAIL },
     update: {},
     create: {
       email: env.ADMIN_EMAIL,
       name: 'Admin User',
-      passwordHash: adminPasswordHash,
       role: 'ADMIN',
-      status: 'APPROVED',
     },
   });
 
   console.log(`Admin user created/verified: ${admin.email}`);
 
+  // Create claude-admin test user
+  const claudeAdmin = await prisma.user.upsert({
+    where: { email: 'claude-admin@example.com' },
+    update: {},
+    create: {
+      email: 'claude-admin@example.com',
+      name: 'Claude Admin',
+      role: 'ADMIN',
+    },
+  });
+
+  console.log(`Claude admin user created: ${claudeAdmin.email}`);
+
+  // Create claude-user test user
+  const claudeUser = await prisma.user.upsert({
+    where: { email: 'claude-user@example.com' },
+    update: {},
+    create: {
+      email: 'claude-user@example.com',
+      name: 'Claude User',
+      role: 'USER',
+    },
+  });
+
+  console.log(`Claude user created: ${claudeUser.email}`);
+
   // Create test user
-  const testUserPasswordHash = await bcrypt.hash('password123', 10);
-  const testUser = await prisma.user.create({
-    data: {
+  const testUser = await prisma.user.upsert({
+    where: { email: 'test@example.com' },
+    update: {},
+    create: {
       email: 'test@example.com',
       name: 'Test User',
-      passwordHash: testUserPasswordHash,
       role: 'USER',
-      status: 'APPROVED',
     },
   });
 
