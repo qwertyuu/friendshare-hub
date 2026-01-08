@@ -14,6 +14,8 @@ COPY frontend/src ./frontend/src
 COPY frontend/public ./frontend/public
 COPY frontend/tsconfig*.json ./frontend/
 COPY frontend/vite.config.ts ./frontend/
+COPY frontend/tailwind.config.ts ./frontend/
+COPY frontend/postcss.config.js ./frontend/
 COPY frontend/index.html ./frontend/
 
 # Build the application
