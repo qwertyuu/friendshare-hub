@@ -14,7 +14,7 @@ const envSchema = z.object({
   MAX_FILE_SIZE: z.coerce.number().default(5242880),
   MAX_FILES_PER_ITEM: z.coerce.number().default(10),
   ADMIN_EMAIL: z.string().email(),
-  CORS_ORIGIN: z.string().default('http://localhost:8080'),
+  CORS_ORIGIN: z.string().default('http://localhost:8080').transform((val) => val.split(',')),
   FRONTEND_URL: z.string().default('http://localhost:8080'),
 
   // OIDC Configuration
