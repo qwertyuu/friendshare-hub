@@ -144,16 +144,6 @@ class OIDCService {
       post_logout_redirect_uri: env.OIDC_POST_LOGOUT_REDIRECT_URI || env.FRONTEND_URL,
     });
   }
-
-  /**
-   * Validate ID token
-   * Note: openid-client validates ID tokens automatically during the callback flow
-   * This method is kept for backward compatibility
-   */
-  async validateIdToken(_idToken: string): Promise<any> {
-    // ID token validation is done automatically by openid-client during callback
-    return { valid: true };
-  }
 }
 
 export const oidcService = new OIDCService();
