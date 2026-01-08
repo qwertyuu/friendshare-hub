@@ -197,7 +197,7 @@ export default function Browse() {
                 <div className="relative h-64 bg-muted rounded-lg overflow-hidden">
                   {selectedItem.images && selectedItem.images.length > 0 ? (
                     <img
-                      src={`${import.meta.env.VITE_API_URL || "http://localhost:3000"}/uploads/${selectedItem.images[0].filePath}`}
+                      src={`${(window as any).ENV?.VITE_API_URL || import.meta.env.VITE_API_URL || "http://localhost:3000"}/uploads/${selectedItem.images[0].filePath}`}
                       alt={selectedItem.title}
                       className="w-full h-full object-cover"
                     />

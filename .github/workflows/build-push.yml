@@ -26,11 +26,9 @@ jobs:
     strategy:
       matrix:
         include:
-          - context: ./backend
-            image-name: backend
+          - image-name: backend
             dockerfile: ./backend/Dockerfile
-          - context: ./frontend
-            image-name: frontend
+          - image-name: frontend
             dockerfile: ./frontend/Dockerfile
 
     steps:

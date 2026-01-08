@@ -8,7 +8,6 @@ declare global {
         email: string;
         name: string;
         role: 'USER' | 'ADMIN';
-        status: 'PENDING' | 'APPROVED' | 'REJECTED';
       };
     }
   }

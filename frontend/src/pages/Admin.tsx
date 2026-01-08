@@ -1,107 +1,65 @@
 import { Header } from "@/components/layout/Header";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Users, CheckCircle, XCircle, Clock } from "lucide-react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Users,
+  Package,
+  FileText,
+  MessageSquare,
+  BarChart3,
+  Shield,
+  Trash2,
+} from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/services/api";
-import { UserCard } from "@/components/admin/UserCard";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { ProtectedRoute } from "@/components/common/ProtectedRoute";
+import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { useOptimisticUpdate } from "@/utils/mutations";
+import type { User } from "@/types";
 
 export default function Admin() {
-  const { updateUserRole, invalidateQueries } = useOptimisticUpdate();
+  const { user: currentUser } = useAuth();
+  const queryClient = useQueryClient();
 
-  // Fetch pending users
-  const { data: pendingData, isLoading: pendingLoading } = useQuery({
-    queryKey: ["admin-users-pending"],
+  // Fetch statistics
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ["admin-statistics"],
+    queryFn: async () => await api.getAdminStatistics(),
+  });
+
+  // Fetch all users
+  const { data: usersData, isLoading: usersLoading } = useQuery({
+    queryKey: ["admin-users"],
     queryFn: async () => {
-      const response = await api.getUsers("PENDING");
+      const response = await api.getUsers();
       return response.users || response || [];
     },
   });
 
-  // Fetch approved users
-  const { data: approvedData, isLoading: approvedLoading } = useQuery({
-    queryKey: ["admin-users-approved"],
-    queryFn: async () => {
-      const response = await api.getUsers("APPROVED");
-      return response.users || response || [];
-    },
-  });
-
-  // Fetch rejected users
-  const { data: rejectedData, isLoading: rejectedLoading } = useQuery({
-    queryKey: ["admin-users-rejected"],
-    queryFn: async () => {
-      const response = await api.getUsers("REJECTED");
-      return response.users || response || [];
-    },
-  });
-
-  // Approve user mutation
-  const approveUserMutation = useMutation({
-    mutationFn: (id: string) => api.approveUser(id),
+  // Delete user mutation
+  const deleteUserMutation = useMutation({
+    mutationFn: (userId: string) => api.deleteUser(userId),
     onSuccess: () => {
-      toast.success("Utilisateur approuvé!");
-      invalidateQueries([["admin-users-pending"], ["admin-users-approved"]]);
+      queryClient.invalidateQueries({ queryKey: ["admin-users"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-statistics"] });
+      toast.success("Utilisateur supprimé");
     },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : "Erreur lors de l'approbation");
-    },
-  });
-
-  // Reject user mutation
-  const rejectUserMutation = useMutation({
-    mutationFn: (id: string) => api.rejectUser(id),
-    onSuccess: () => {
-      toast.success("Utilisateur rejeté!");
-      invalidateQueries([["admin-users-pending"], ["admin-users-rejected"]]);
-    },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : "Erreur lors du rejet");
+    onError: (error: Error) => {
+      toast.error(error.message || "Erreur lors de la suppression");
     },
   });
 
-  // Promote user to admin mutation
-  const promoteUserMutation = useMutation({
-    mutationFn: (id: string) => api.promoteUser(id),
-    onSuccess: (_, userId) => {
-      toast.success("Utilisateur promu administrateur!");
-      updateUserRole(userId, "ADMIN", ["admin-users-approved"]);
-      invalidateQueries([
-        ["admin-users-pending"],
-        ["admin-users-approved"],
-        ["admin-users-rejected"],
-      ]);
-    },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : "Erreur lors de la promotion");
-    },
-  });
+  const handleDeleteUser = (userId: string, userName: string) => {
+    if (confirm(`Voulez-vous vraiment supprimer l'utilisateur ${userName} ?`)) {
+      deleteUserMutation.mutate(userId);
+    }
+  };
 
-  // Demote user from admin mutation
-  const demoteUserMutation = useMutation({
-    mutationFn: (id: string) => api.demoteUser(id),
-    onSuccess: (_, userId) => {
-      toast.success("Utilisateur rétrogradé!");
-      updateUserRole(userId, "USER", ["admin-users-approved"]);
-      invalidateQueries([
-        ["admin-users-pending"],
-        ["admin-users-approved"],
-        ["admin-users-rejected"],
-      ]);
-    },
-    onError: (error) => {
-      toast.error(error instanceof Error ? error.message : "Erreur lors de la rétrogradation");
-    },
-  });
+  if (statsLoading || usersLoading) return <LoadingSpinner />;
 
-  if (pendingLoading || approvedLoading || rejectedLoading) return <LoadingSpinner />;
-
-  const pendingUsers = Array.isArray(pendingData) ? pendingData : [];
-  const approvedUsers = Array.isArray(approvedData) ? approvedData : [];
-  const rejectedUsers = Array.isArray(rejectedData) ? rejectedData : [];
+  const users = Array.isArray(usersData) ? usersData : [];
 
   return (
     <ProtectedRoute requiredRole="ADMIN">
@@ -112,125 +70,187 @@ export default function Admin() {
           {/* Page Header */}
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-2">
-              <Users className="h-8 w-8 text-primary" />
-              <h1 className="text-3xl font-bold text-foreground">Gestion des utilisateurs</h1>
+              <BarChart3 className="h-8 w-8 text-primary" />
+              <h1 className="text-3xl font-bold text-foreground">
+                Tableau de bord Admin
+              </h1>
             </div>
             <p className="text-muted-foreground">
-              Approuve ou rejette les demandes d'inscription
+              Vue d'ensemble de la plateforme
             </p>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-4 mb-8">
-            <div className="bg-card border rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Clock className="h-5 w-5 text-yellow-600" />
-                <span className="text-sm text-muted-foreground">En attente</span>
-              </div>
-              <p className="text-2xl font-bold">{pendingUsers.length}</p>
-            </div>
-            <div className="bg-card border rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-                <span className="text-sm text-muted-foreground">Approuvés</span>
-              </div>
-              <p className="text-2xl font-bold">{approvedUsers.length}</p>
-            </div>
-            <div className="bg-card border rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <XCircle className="h-5 w-5 text-red-600" />
-                <span className="text-sm text-muted-foreground">Rejetés</span>
-              </div>
-              <p className="text-2xl font-bold">{rejectedUsers.length}</p>
-            </div>
+          {/* Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {/* Users Stats */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Utilisateurs
+                </CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats?.users?.total || 0}</div>
+                <p className="text-xs text-muted-foreground">
+                  {stats?.users?.admins || 0} admins, {stats?.users?.users || 0} users
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Items Stats */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Objets</CardTitle>
+                <Package className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats?.items?.total || 0}</div>
+                <p className="text-xs text-muted-foreground">
+                  {stats?.items?.available || 0} disponibles, {stats?.items?.borrowed || 0} empruntés
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* Borrow Requests Stats */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Emprunts</CardTitle>
+                <FileText className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{stats?.requests?.active || 0}</div>
+                <p className="text-xs text-muted-foreground">
+                  actifs · {stats?.requests?.pending || 0} en attente
+                </p>
+              </CardContent>
+            </Card>
+
+            {/* General Requests Stats */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Demandes
+                </CardTitle>
+                <MessageSquare className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {stats?.generalRequests?.open || 0}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  ouvertes · {stats?.generalRequests?.total || 0} total
+                </p>
+              </CardContent>
+            </Card>
           </div>
 
-          {/* Users by Status */}
-          <Tabs defaultValue="pending" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-8">
-              <TabsTrigger value="pending" className="flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                En attente ({pendingUsers.length})
-              </TabsTrigger>
-              <TabsTrigger value="approved" className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4" />
-                Approuvés ({approvedUsers.length})
-              </TabsTrigger>
-              <TabsTrigger value="rejected" className="flex items-center gap-2">
-                <XCircle className="h-4 w-4" />
-                Rejetés ({rejectedUsers.length})
-              </TabsTrigger>
-            </TabsList>
+          {/* Detailed Statistics */}
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-primary" />
+                Statistiques détaillées
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <h3 className="font-semibold text-foreground mb-2">Utilisateurs</h3>
+                <ul className="text-sm text-muted-foreground space-y-1 ml-4">
+                  <li>• {stats?.users?.total || 0} total ({stats?.users?.admins || 0} admins, {stats?.users?.users || 0} users)</li>
+                </ul>
+              </div>
 
-            {/* Pending Users */}
-            <TabsContent value="pending">
-              {pendingUsers.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {pendingUsers.map((user) => (
-                    <UserCard
+              <div>
+                <h3 className="font-semibold text-foreground mb-2">Objets</h3>
+                <ul className="text-sm text-muted-foreground space-y-1 ml-4">
+                  <li>• {stats?.items?.total || 0} total</li>
+                  <li>• {stats?.items?.available || 0} disponibles</li>
+                  <li>• {stats?.items?.borrowed || 0} empruntés</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-foreground mb-2">Emprunts</h3>
+                <ul className="text-sm text-muted-foreground space-y-1 ml-4">
+                  <li>• {stats?.requests?.active || 0} actifs</li>
+                  <li>• {stats?.requests?.pending || 0} en attente</li>
+                  <li>• {stats?.requests?.approved || 0} approuvés</li>
+                  <li>• {stats?.requests?.total || 0} total</li>
+                </ul>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-foreground mb-2">
+                  Demandes générales
+                </h3>
+                <ul className="text-sm text-muted-foreground space-y-1 ml-4">
+                  <li>• {stats?.generalRequests?.open || 0} ouvertes</li>
+                  <li>• {stats?.generalRequests?.total || 0} total</li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* User List */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-primary" />
+                Utilisateurs
+              </CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Les rôles sont gérés via les groupes LDAP dans Authentik
+              </p>
+            </CardHeader>
+            <CardContent>
+              {users.length > 0 ? (
+                <div className="space-y-2">
+                  {users.map((user: User) => (
+                    <div
                       key={user.id}
-                      user={user}
-                      onApprove={(id) => approveUserMutation.mutate(id)}
-                      onReject={(id) => rejectUserMutation.mutate(id)}
-                      isLoading={approveUserMutation.isPending || rejectUserMutation.isPending}
-                    />
+                      className="flex items-center justify-between p-4 border rounded-lg bg-card"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-medium text-foreground">{user.name}</p>
+                          <Badge
+                            variant={user.role === "ADMIN" ? "default" : "secondary"}
+                          >
+                            {user.role === "ADMIN" ? (
+                              <Shield className="h-3 w-3 mr-1" />
+                            ) : null}
+                            {user.role}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{user.email}</p>
+                      </div>
+                      {currentUser?.id !== user.id && (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDeleteUser(user.id, user.name)}
+                          disabled={deleteUserMutation.isPending}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-16">
-                  <Clock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <div className="text-center py-8">
+                  <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <h3 className="text-lg font-semibold text-foreground mb-2">
-                    Aucun utilisateur en attente
+                    Aucun utilisateur
                   </h3>
-                  <p className="text-muted-foreground">Tous les utilisateurs ont été traités!</p>
+                  <p className="text-muted-foreground">
+                    Les utilisateurs apparaîtront ici
+                  </p>
                 </div>
               )}
-            </TabsContent>
-
-            {/* Approved Users */}
-            <TabsContent value="approved">
-              {approvedUsers.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {approvedUsers.map((user) => (
-                    <UserCard
-                      key={user.id}
-                      user={user}
-                      onPromote={(id) => promoteUserMutation.mutate(id)}
-                      onDemote={(id) => demoteUserMutation.mutate(id)}
-                      isLoading={promoteUserMutation.isPending || demoteUserMutation.isPending}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-16">
-                  <CheckCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold text-foreground mb-2">
-                    Aucun utilisateur approuvé
-                  </h3>
-                  <p className="text-muted-foreground">Les utilisateurs approuvés apparaîtront ici</p>
-                </div>
-              )}
-            </TabsContent>
-
-            {/* Rejected Users */}
-            <TabsContent value="rejected">
-              {rejectedUsers.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {rejectedUsers.map((user) => (
-                    <UserCard key={user.id} user={user} />
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-16">
-                  <XCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-semibold text-foreground mb-2">
-                    Aucun utilisateur rejeté
-                  </h3>
-                  <p className="text-muted-foreground">Les utilisateurs rejetés apparaîtront ici</p>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
+            </CardContent>
+          </Card>
         </main>
       </div>
     </ProtectedRoute>

@@ -21,7 +21,6 @@ export const auth = (req: Request, res: Response, next: NextFunction) => {
       email: decoded.email,
       name: '', // Will be populated from DB if needed
       role: decoded.role,
-      status: 'APPROVED', // Will be populated from DB if needed
     };
 
     next();
@@ -60,26 +59,4 @@ export const adminOnly = (req: Request, res: Response, next: NextFunction) => {
   }
 
   next();
-};
-
-export const requireStatus = (allowedStatuses: string[]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
-    if (!req.user) {
-      return res.status(401).json({
-        error: 'Unauthorized',
-        code: 'UNAUTHORIZED',
-        message: 'Authentication required',
-      });
-    }
-
-    if (!allowedStatuses.includes(req.user.status)) {
-      return res.status(403).json({
-        error: 'Forbidden',
-        code: 'FORBIDDEN',
-        message: 'User account not in required status',
-      });
-    }
-
-    next();
-  };
 };

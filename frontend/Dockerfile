@@ -29,6 +29,12 @@ COPY frontend/nginx.conf /etc/nginx/conf.d/
 # Copy built application from builder
 COPY --from=builder /app/frontend/dist /usr/share/nginx/html
 
+# Copy runtime environment script
+# nginx:alpine exécute automatiquement les scripts .sh dans /docker-entrypoint.d/
+COPY frontend/runtime-env.sh /docker-entrypoint.d/10-inject-runtime-env.sh
+RUN chmod +x /docker-entrypoint.d/10-inject-runtime-env.sh
+
 EXPOSE 80
 
+# CMD par défaut de nginx:alpine - les scripts dans /docker-entrypoint.d/ s'exécutent avant
 CMD ["nginx", "-g", "daemon off;"]

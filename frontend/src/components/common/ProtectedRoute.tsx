@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { LoadingSpinner } from "./LoadingSpinner";
-import { PendingApprovalScreen } from "./PendingApprovalScreen";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -21,11 +20,6 @@ export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) 
 
   if (loading) return <LoadingSpinner />;
   if (!user) return null;
-
-  // Check if user is approved
-  if (user.status !== "APPROVED") {
-    return <PendingApprovalScreen />;
-  }
 
   // Check if specific role is required
   if (requiredRole && user.role !== requiredRole) {

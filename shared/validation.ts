@@ -1,17 +1,5 @@
 import { z } from 'zod';
 
-// Auth schemas
-export const registerSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  name: z.string().min(2, 'Name must be at least 2 characters'),
-});
-
-export const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(1, 'Password is required'),
-});
-
 // Items schemas
 export const createItemSchema = z.object({
   title: z.string().min(1, 'Title is required').max(200),
@@ -47,8 +35,6 @@ export const reorderImagesSchema = z.object({
 });
 
 // Type exports
-export type RegisterInput = z.infer<typeof registerSchema>;
-export type LoginInput = z.infer<typeof loginSchema>;
 export type CreateItemInput = z.infer<typeof createItemSchema>;
 export type UpdateItemInput = z.infer<typeof updateItemSchema>;
 export type CreateRequestInput = z.infer<typeof createRequestSchema>;

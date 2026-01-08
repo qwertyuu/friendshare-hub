@@ -11,18 +11,13 @@ export type ItemCategory =
 export type ItemStatus = "AVAILABLE" | "BORROWED" | "UNAVAILABLE";
 export type RequestStatus = "PENDING" | "APPROVED" | "REJECTED" | "COMPLETED";
 export type GeneralRequestStatus = "OPEN" | "FULFILLED" | "CANCELLED";
-export type UserStatus = "PENDING" | "APPROVED" | "REJECTED";
 export type UserRole = "USER" | "ADMIN";
-export type AuthProvider = "LOCAL" | "AUTHENTIK";
 
 export interface User {
   id: string;
   email: string;
   name: string;
   role: UserRole;
-  status: UserStatus;
-  rejectionReason?: string | null;
-  authProvider?: AuthProvider;
 }
 
 export interface Item {

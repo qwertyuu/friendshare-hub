@@ -1,6 +1,7 @@
 import { User } from "@/types";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+// @ts-ignore - window.ENV is injected at runtime
+const API_URL = window.ENV?.VITE_API_URL || import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export interface AuthResponse {
   message: string;
@@ -251,6 +252,12 @@ class ApiClient {
   }
 
   // Admin endpoints
+  async getAdminStatistics() {
+    return this.request("/api/admin/statistics", {
+      method: "GET",
+    });
+  }
+
   async getUsers(status?: string) {
     const params = new URLSearchParams();
     if (status && status !== "all") params.append("status", status);
@@ -259,28 +266,9 @@ class ApiClient {
     });
   }
 
-  async approveUser(id: string) {
-    return this.request(`/api/admin/users/${id}/approve`, {
-      method: "PATCH",
-    });
-  }
-
-  async rejectUser(id: string, reason?: string) {
-    return this.request(`/api/admin/users/${id}/reject`, {
-      method: "PATCH",
-      body: reason ? JSON.stringify({ reason }) : undefined,
-    });
-  }
-
-  async promoteUser(id: string) {
-    return this.request(`/api/admin/users/${id}/promote`, {
-      method: "PATCH",
-    });
-  }
-
-  async demoteUser(id: string) {
-    return this.request(`/api/admin/users/${id}/demote`, {
-      method: "PATCH",
+  async deleteUser(userId: string) {
+    return this.request(`/api/admin/users/${userId}`, {
+      method: "DELETE",
     });
   }
 }

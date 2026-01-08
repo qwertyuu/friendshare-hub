@@ -143,21 +143,6 @@ export const authController = {
     }
   },
 
-  /**
-   * Legacy password registration (DEPRECATED - to be removed)
-   * POST /api/auth/register
-   */
-  async register(req: Request, res: Response, next: NextFunction) {
-    try {
-      return res.status(410).json({
-        error: 'Gone',
-        message: 'Password-based registration is no longer available. Please use SSO login.',
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-
   async me(req: Request, res: Response, next: NextFunction) {
     try {
       if (!req.user) {
@@ -178,7 +163,6 @@ export const authController = {
           email: user.email,
           name: user.name,
           role: user.role,
-          status: user.status,
         },
       });
     } catch (error) {

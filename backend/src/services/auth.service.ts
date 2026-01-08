@@ -1,4 +1,3 @@
-import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env.js';
 import { prisma } from '../config/database.js';
@@ -19,14 +18,6 @@ interface OIDCUserInfo {
 }
 
 export const authService = {
-  async hashPassword(password: string): Promise<string> {
-    return bcrypt.hash(password, env.BCRYPT_ROUNDS);
-  },
-
-  async comparePassword(password: string, hash: string): Promise<boolean> {
-    return bcrypt.compare(password, hash);
-  },
-
   generateToken(userId: string, email: string, role: 'USER' | 'ADMIN'): string {
     const payload: TokenPayload = {
       userId,
@@ -58,7 +49,7 @@ export const authService = {
 
     logger.info('Syncing OIDC user', { sub, email, name, role, groups });
 
-    // Find or create user
+    // Find or create user by authentikId
     let user = await prisma.user.findUnique({
       where: { authentikId: sub },
     });
@@ -71,50 +62,43 @@ export const authService = {
           email,
           name,
           role,
-          status: 'APPROVED', // Auto-approve SSO users
-          authProvider: 'AUTHENTIK',
           lastLoginAt: new Date(),
         },
       });
 
-      logger.info('Updated existing OIDC user', { userId: user.id });
+      logger.info('Updated existing SSO user', { userId: user.id });
     } else {
-      // Check if email already exists (legacy user)
+      // Check if email already exists (link existing account)
       const existingUser = await prisma.user.findUnique({
         where: { email },
       });
 
       if (existingUser) {
-        // Migrate legacy user to SSO
+        // Link existing user to SSO
         user = await prisma.user.update({
           where: { id: existingUser.id },
           data: {
             authentikId: sub,
-            name, // Update name from OIDC
-            role, // Update role based on groups
-            status: 'APPROVED', // Auto-approve
-            authProvider: 'AUTHENTIK',
+            name,
+            role,
             lastLoginAt: new Date(),
           },
         });
 
-        logger.info('Migrated legacy user to OIDC', { userId: user.id });
+        logger.info('Linked existing user to SSO', { userId: user.id });
       } else {
-        // Create new user
+        // Create new SSO user
         user = await prisma.user.create({
           data: {
             email,
             name,
             role,
             authentikId: sub,
-            authProvider: 'AUTHENTIK',
-            status: 'APPROVED', // Auto-approve SSO users
-            passwordHash: null, // No password for SSO users
             lastLoginAt: new Date(),
           },
         });
 
-        logger.info('Created new OIDC user', { userId: user.id });
+        logger.info('Created new SSO user', { userId: user.id });
       }
     }
 

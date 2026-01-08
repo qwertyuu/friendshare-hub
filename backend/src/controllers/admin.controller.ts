@@ -13,22 +13,12 @@ export const adminController = {
         throw new UnauthorizedError('Admin access required');
       }
 
-      const { status } = req.query;
-
-      const where: any = {};
-      if (status && status !== 'all') {
-        where.status = status;
-      }
-
       const users = await prisma.user.findMany({
-        where,
         select: {
           id: true,
           email: true,
           name: true,
           role: true,
-          status: true,
-          rejectionReason: true,
           createdAt: true,
           _count: {
             select: {
@@ -46,7 +36,52 @@ export const adminController = {
     }
   },
 
-  async approveUser(req: Request, res: Response, next: NextFunction) {
+  async getStatistics(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        throw new UnauthorizedError('Authentication required');
+      }
+
+      if (req.user.role !== 'ADMIN') {
+        throw new UnauthorizedError('Admin access required');
+      }
+
+      // Get platform-wide statistics
+      const stats = {
+        users: {
+          total: await prisma.user.count(),
+          admins: await prisma.user.count({ where: { role: 'ADMIN' } }),
+          users: await prisma.user.count({ where: { role: 'USER' } }),
+        },
+        items: {
+          total: await prisma.item.count(),
+          available: await prisma.item.count({ where: { status: 'AVAILABLE' } }),
+          borrowed: await prisma.item.count({ where: { status: 'BORROWED' } }),
+        },
+        requests: {
+          total: await prisma.borrowRequest.count(),
+          pending: await prisma.borrowRequest.count({ where: { status: 'PENDING' } }),
+          approved: await prisma.borrowRequest.count({ where: { status: 'APPROVED' } }),
+          active: await prisma.borrowRequest.count({
+            where: {
+              status: 'APPROVED',
+              endDate: { gte: new Date() },
+            },
+          }),
+        },
+        generalRequests: {
+          total: await prisma.generalRequest.count(),
+          open: await prisma.generalRequest.count({ where: { status: 'OPEN' } }),
+        },
+      };
+
+      return res.json(stats);
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async deleteUser(req: Request, res: Response, next: NextFunction) {
     try {
       if (!req.user) {
         throw new UnauthorizedError('Authentication required');
@@ -58,6 +93,15 @@ export const adminController = {
 
       const { id } = req.params;
 
+      // Prevent self-deletion
+      if (id === req.user.id) {
+        return res.status(400).json({
+          error: 'Bad Request',
+          message: 'Cannot delete your own account',
+        });
+      }
+
+      // Check if user exists
       const user = await prisma.user.findUnique({
         where: { id },
       });
@@ -66,156 +110,17 @@ export const adminController = {
         throw new NotFoundError('User not found');
       }
 
-      const updatedUser = await prisma.user.update({
+      // Delete user (cascade will handle related items, requests, etc.)
+      await prisma.user.delete({
         where: { id },
-        data: { status: 'APPROVED' },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          role: true,
-          status: true,
-          createdAt: true,
-        },
       });
 
-      return res.json({ user: updatedUser });
+      return res.json({
+        message: 'User deleted successfully',
+      });
     } catch (error) {
       next(error);
     }
   },
 
-  async rejectUser(req: Request, res: Response, next: NextFunction) {
-    try {
-      if (!req.user) {
-        throw new UnauthorizedError('Authentication required');
-      }
-
-      if (req.user.role !== 'ADMIN') {
-        throw new UnauthorizedError('Admin access required');
-      }
-
-      const { id } = req.params;
-      const { reason } = req.body;
-
-      const user = await prisma.user.findUnique({
-        where: { id },
-      });
-
-      if (!user) {
-        throw new NotFoundError('User not found');
-      }
-
-      const updatedUser = await prisma.user.update({
-        where: { id },
-        data: {
-          status: 'REJECTED',
-          rejectionReason: reason || null,
-        },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          role: true,
-          status: true,
-          rejectionReason: true,
-          createdAt: true,
-        },
-      });
-
-      return res.json({ user: updatedUser });
-    } catch (error) {
-      next(error);
-    }
-  },
-
-  async promoteUser(req: Request, res: Response, next: NextFunction) {
-    try {
-      if (!req.user) {
-        throw new UnauthorizedError('Authentication required');
-      }
-
-      if (req.user.role !== 'ADMIN') {
-        throw new UnauthorizedError('Admin access required');
-      }
-
-      const { id } = req.params;
-
-      const user = await prisma.user.findUnique({
-        where: { id },
-      });
-
-      if (!user) {
-        throw new NotFoundError('User not found');
-      }
-
-      if (user.role === 'ADMIN') {
-        throw new Error('User is already an admin');
-      }
-
-      const updatedUser = await prisma.user.update({
-        where: { id },
-        data: { role: 'ADMIN' },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          role: true,
-          status: true,
-          createdAt: true,
-        },
-      });
-
-      return res.json({ user: updatedUser });
-    } catch (error) {
-      next(error);
-    }
-  },
-
-  async demoteUser(req: Request, res: Response, next: NextFunction) {
-    try {
-      if (!req.user) {
-        throw new UnauthorizedError('Authentication required');
-      }
-
-      if (req.user.role !== 'ADMIN') {
-        throw new UnauthorizedError('Admin access required');
-      }
-
-      const { id } = req.params;
-
-      const user = await prisma.user.findUnique({
-        where: { id },
-      });
-
-      if (!user) {
-        throw new NotFoundError('User not found');
-      }
-
-      if (req.user.id === id) {
-        throw new Error('Cannot demote yourself');
-      }
-
-      if (user.role === 'USER') {
-        throw new Error('User is already a regular user');
-      }
-
-      const updatedUser = await prisma.user.update({
-        where: { id },
-        data: { role: 'USER' },
-        select: {
-          id: true,
-          email: true,
-          name: true,
-          role: true,
-          status: true,
-          createdAt: true,
-        },
-      });
-
-      return res.json({ user: updatedUser });
-    } catch (error) {
-      next(error);
-    }
-  },
 };
