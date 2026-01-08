@@ -40,12 +40,11 @@ COPY package*.json ./
 COPY backend/package*.json ./backend/
 RUN npm install --only=production && npm install --prefix backend --only=production
 
-# Copy prisma from builder
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-
 # Copy prisma schema and migrations
 COPY backend/prisma ./backend/prisma
+
+# Generate Prisma client for the correct platform (Alpine + OpenSSL 3)
+RUN cd backend && npx prisma generate
 
 # Copy compiled code from builder
 COPY --from=builder /app/backend/dist ./backend/dist

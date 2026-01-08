@@ -20,14 +20,26 @@ const envSchema = z.object({
   // OIDC Configuration
   OIDC_ENABLED: z.coerce.boolean().default(true),
   OIDC_ISSUER: z.string().url().default('https://auth.raphaelcote.com/application/o/friendshare-hub/'),
-  OIDC_CLIENT_ID: z.string().min(1),
-  OIDC_CLIENT_SECRET: z.string().min(1),
-  OIDC_REDIRECT_URI: z.string().url(),
+  OIDC_CLIENT_ID: z.string().optional().default(''),
+  OIDC_CLIENT_SECRET: z.string().optional().default(''),
+  OIDC_REDIRECT_URI: z.string().optional().default(''),
   OIDC_POST_LOGOUT_REDIRECT_URI: z.string().url().optional(),
   OIDC_SCOPE: z.string().default('openid profile email groups'),
   OIDC_ADMIN_GROUP: z.string().default('friendshare-admins'),
   OIDC_USER_GROUP: z.string().default('friendshare-users'),
-});
+}).refine(
+  (data) => {
+    // Si OIDC est activé, les credentials doivent être fournis
+    if (data.OIDC_ENABLED) {
+      return data.OIDC_CLIENT_ID && data.OIDC_CLIENT_SECRET && data.OIDC_REDIRECT_URI;
+    }
+    return true;
+  },
+  {
+    message: 'OIDC_CLIENT_ID, OIDC_CLIENT_SECRET, and OIDC_REDIRECT_URI are required when OIDC_ENABLED is true',
+    path: ['OIDC_ENABLED'],
+  }
+);
 
 export type Env = z.infer<typeof envSchema>;
 
