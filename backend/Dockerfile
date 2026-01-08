@@ -30,6 +30,9 @@ FROM node:18-alpine
 
 WORKDIR /app
 
+# Install OpenSSL 3 for Prisma compatibility
+RUN apk add --no-cache openssl
+
 # Install only runtime dependencies
 RUN npm install -g pm2
 
