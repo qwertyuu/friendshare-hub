@@ -8,6 +8,7 @@ import { ProtectedRoute } from "./components/common/ProtectedRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import AuthCallback from "./pages/AuthCallback";
 import Info from "./pages/Info";
 import Browse from "./pages/Browse";
 import MyItems from "./pages/MyItems";
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/info" element={<Info />} />
             <Route
               path="/browse"

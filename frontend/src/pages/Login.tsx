@@ -1,111 +1,91 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Sparkles, Mail, Lock, ArrowRight, Loader2 } from "lucide-react";
+import { Sparkles, ArrowRight, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const [searchParams] = useSearchParams();
+  const { loginWithSSO, user } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+  // Check for auth errors from callback
+  useEffect(() => {
+    const error = searchParams.get('error');
+    if (error === 'auth_failed') {
+      toast.error('Authentication failed. Please try again.');
+    }
+  }, [searchParams]);
 
-    try {
-      await login(email, password);
-      toast.success("Bienvenue !");
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
       navigate("/browse");
+    }
+  }, [user, navigate]);
+
+  const handleSSOLogin = async () => {
+    setLoading(true);
+    try {
+      await loginWithSSO();
+      // User will be redirected to Authentik, no need for success message
     } catch (error) {
       const message = error instanceof Error ? error.message : "Login failed";
       toast.error(message);
-    } finally {
       setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen flex">
-      {/* Left side - Form */}
+      {/* Left side - Login */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md">
           {/* Logo */}
-          <Link to="/" className="inline-flex items-center gap-2 mb-10 group">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-hero shadow-soft group-hover:shadow-glow transition-shadow duration-300">
+          <div className="inline-flex items-center gap-2 mb-10">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-hero shadow-soft">
               <Sparkles className="h-5 w-5 text-primary-foreground" />
             </div>
             <span className="text-xl font-bold text-foreground">
               <span className="text-primary">Raphartage Club</span>
             </span>
-          </Link>
+          </div>
 
           <h1 className="text-3xl font-bold text-foreground mb-2">
             Connexion
           </h1>
           <p className="text-muted-foreground mb-8">
-            Accède à l'inventaire partagé
+            Connecte-toi pour accéder à l'inventaire partagé
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="ton@email.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
-                  required
-                />
-              </div>
-            </div>
+          {/* Login Button */}
+          <Button
+            onClick={handleSSOLogin}
+            variant="hero"
+            size="lg"
+            className="w-full"
+            disabled={loading}
+          >
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <>
+                Se connecter
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
+          </Button>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Mot de passe</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10"
-                  autoComplete="current-password"
-                  required
-                />
-              </div>
-            </div>
-
-            <Button type="submit" variant="hero" size="lg" className="w-full" disabled={loading}>
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <>
-                  Se connecter
-                  <ArrowRight className="h-4 w-4" />
-                </>
-              )}
-            </Button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-sm text-muted-foreground">
-              Pas encore de compte ?{" "}
-              <Link to="/register" className="text-primary font-medium hover:underline">
-                S'inscrire
-              </Link>
-            </p>
-          </div>
+          {/* Info alert */}
+          <Alert className="mt-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Tu seras redirigé vers la page d'authentification pour te connecter.
+            </AlertDescription>
+          </Alert>
         </div>
       </div>
 

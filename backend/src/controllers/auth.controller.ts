@@ -1,102 +1,158 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../config/database.js';
 import { authService } from '../services/auth.service.js';
-import { ConflictError, UnauthorizedError } from '../utils/errors.js';
+import { oidcService } from '../services/oidc.service.js';
+import { UnauthorizedError, BadRequestError } from '../utils/errors.js';
 import { env } from '../config/env.js';
+import { logger } from '../utils/logger.js';
 
 export const authController = {
-  async register(req: Request, res: Response, next: NextFunction) {
+  /**
+   * Initiate OIDC login flow
+   * GET /api/auth/login
+   */
+  async login(req: Request, res: Response, next: NextFunction) {
     try {
-      const { email, password, name } = req.body;
-
-      // Check if user already exists
-      const existingUser = await prisma.user.findUnique({
-        where: { email },
-      });
-
-      if (existingUser) {
-        throw new ConflictError('User with this email already exists');
+      if (!env.OIDC_ENABLED) {
+        throw new BadRequestError('SSO authentication is not enabled');
       }
 
-      // Hash password
-      const passwordHash = await authService.hashPassword(password);
+      const { url, codeVerifier, state } = oidcService.generateAuthorizationUrl();
 
-      // Create user
-      const user = await prisma.user.create({
-        data: {
-          email,
-          passwordHash,
-          name,
-          role: email === env.ADMIN_EMAIL ? 'ADMIN' : 'USER',
-          status: email === env.ADMIN_EMAIL ? 'APPROVED' : 'PENDING',
-        },
+      // Store PKCE parameters in session/cookie for callback
+      res.cookie('oidc_code_verifier', codeVerifier, {
+        httpOnly: true,
+        secure: env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 10 * 60 * 1000, // 10 minutes
       });
 
-      return res.status(201).json({
-        message: 'Registration successful. Awaiting approval.',
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          status: user.status,
-        },
+      res.cookie('oidc_state', state, {
+        httpOnly: true,
+        secure: env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 10 * 60 * 1000, // 10 minutes
       });
+
+      return res.json({ authorizationUrl: url });
     } catch (error) {
       next(error);
     }
   },
 
-  async login(req: Request, res: Response, next: NextFunction) {
+  /**
+   * Handle OIDC callback
+   * GET /api/auth/callback
+   */
+  async callback(req: Request, res: Response, next: NextFunction) {
     try {
-      const { email, password } = req.body;
+      const { code, state: receivedState } = req.query;
 
-      // Find user
-      const user = await prisma.user.findUnique({
-        where: { email },
-      });
-
-      if (!user) {
-        throw new UnauthorizedError('Invalid email or password');
+      if (!code || typeof code !== 'string') {
+        throw new BadRequestError('Authorization code is required');
       }
 
-      // Check password
-      const isPasswordValid = await authService.comparePassword(password, user.passwordHash);
-      if (!isPasswordValid) {
-        throw new UnauthorizedError('Invalid email or password');
+      if (!receivedState || typeof receivedState !== 'string') {
+        throw new BadRequestError('State parameter is required');
       }
 
-      // Generate token
-      const token = authService.generateToken(user.id, user.email, user.role);
+      // Retrieve PKCE parameters from cookies
+      const codeVerifier = req.cookies.oidc_code_verifier;
+      const state = req.cookies.oidc_state;
 
-      // Set cookie
-      res.cookie('token', token, {
+      if (!codeVerifier || !state) {
+        throw new UnauthorizedError('Missing PKCE parameters. Please try logging in again.');
+      }
+
+      // Exchange code for tokens
+      const tokenSet = await oidcService.exchangeCodeForTokens(
+        code,
+        codeVerifier,
+        state,
+        receivedState
+      );
+
+      // Get user information
+      const userInfo = await oidcService.getUserInfo(tokenSet.access_token!);
+
+      // Sync/create user in database
+      const user = await authService.syncOIDCUser(userInfo);
+
+      // Generate application JWT token for session management
+      const appToken = authService.generateToken(user.id, user.email, user.role);
+
+      // Clear OIDC cookies
+      res.clearCookie('oidc_code_verifier');
+      res.clearCookie('oidc_state');
+
+      // Set application session cookie
+      res.cookie('token', appToken, {
         httpOnly: true,
         secure: env.NODE_ENV === 'production',
         sameSite: 'strict',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
 
+      // Store ID token for logout (optional)
+      if (tokenSet.id_token) {
+        res.cookie('id_token', tokenSet.id_token, {
+          httpOnly: true,
+          secure: env.NODE_ENV === 'production',
+          sameSite: 'strict',
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+      }
+
+      // Redirect to frontend
+      return res.redirect(`${env.FRONTEND_URL}/browse`);
+    } catch (error) {
+      logger.error('OIDC callback error', error);
+      // Redirect to frontend with error
+      return res.redirect(`${env.FRONTEND_URL}/login?error=auth_failed`);
+    }
+  },
+
+  /**
+   * Logout (both local and SSO session)
+   * POST /api/auth/logout
+   */
+  async logout(req: Request, res: Response, next: NextFunction) {
+    try {
+      const idToken = req.cookies.id_token;
+
+      // Clear application cookies
+      res.clearCookie('token');
+      res.clearCookie('id_token');
+
+      // Generate SSO logout URL if ID token available
+      let ssoLogoutUrl: string | null = null;
+      if (idToken && env.OIDC_ENABLED) {
+        try {
+          ssoLogoutUrl = oidcService.getEndSessionUrl(idToken);
+        } catch (error) {
+          logger.error('Failed to generate SSO logout URL', error);
+        }
+      }
+
       return res.json({
-        message: 'Login successful',
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          status: user.status,
-        },
-        token,
+        message: 'Logout successful',
+        ssoLogoutUrl, // Frontend can redirect to this URL to end SSO session
       });
     } catch (error) {
       next(error);
     }
   },
 
-  async logout(req: Request, res: Response, next: NextFunction) {
+  /**
+   * Legacy password registration (DEPRECATED - to be removed)
+   * POST /api/auth/register
+   */
+  async register(req: Request, res: Response, next: NextFunction) {
     try {
-      res.clearCookie('token');
-      return res.json({ message: 'Logout successful' });
+      return res.status(410).json({
+        error: 'Gone',
+        message: 'Password-based registration is no longer available. Please use SSO login.',
+      });
     } catch (error) {
       next(error);
     }

@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Menu, X, LogIn, UserPlus, LogOut, Info } from "lucide-react";
+import { Sparkles, Menu, X, LogIn, LogOut, Info } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -81,16 +81,10 @@ export function Header() {
                   À propos
                 </Link>
               </Button>
-              <Button variant="ghost" size="sm" asChild>
+              <Button variant="hero" size="sm" asChild>
                 <Link to="/login">
                   <LogIn className="h-4 w-4" />
                   Connexion
-                </Link>
-              </Button>
-              <Button variant="hero" size="sm" asChild>
-                <Link to="/register">
-                  <UserPlus className="h-4 w-4" />
-                  S'inscrire
                 </Link>
               </Button>
             </>
@@ -165,18 +159,12 @@ export function Header() {
             )}
             <div className="flex gap-2 mt-2 pt-2 border-t border-border">
               {!user ? (
-                <>
-                  <Button variant="outline" className="flex-1" asChild>
-                    <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
-                      Connexion
-                    </Link>
-                  </Button>
-                  <Button variant="hero" className="flex-1" asChild>
-                    <Link to="/register" onClick={() => setMobileMenuOpen(false)}>
-                      S'inscrire
-                    </Link>
-                  </Button>
-                </>
+                <Button variant="hero" className="flex-1" asChild>
+                  <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+                    <LogIn className="h-4 w-4" />
+                    Connexion
+                  </Link>
+                </Button>
               ) : (
                 <Button variant="outline" className="flex-1" onClick={() => {
                   handleLogout();

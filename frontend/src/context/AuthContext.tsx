@@ -5,8 +5,7 @@ export interface AuthContextType {
   user: User | null;
   loading: boolean;
   error: string | null;
-  login: (email: string, password: string) => Promise<void>;
-  register: (name: string, email: string, password: string) => Promise<void>;
+  loginWithSSO: () => Promise<void>;
   logout: () => Promise<void>;
   clearError: () => void;
 }
@@ -35,41 +34,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const loginWithSSO = async () => {
     try {
       setError(null);
       setLoading(true);
-      const response = await api.login(email, password);
-      setUser(response.user);
+
+      // Get authorization URL from backend
+      const response = await api.getLoginUrl();
+
+      // Redirect to Authentik
+      window.location.href = response.authorizationUrl;
     } catch (err) {
       const message = err instanceof Error ? err.message : "Login failed";
       setError(message);
-      throw err;
-    } finally {
       setLoading(false);
-    }
-  };
-
-  const register = async (name: string, email: string, password: string) => {
-    try {
-      setError(null);
-      setLoading(true);
-      await api.register(email, password, name);
-      // Don't set user here - account is pending approval
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Registration failed";
-      setError(message);
       throw err;
-    } finally {
-      setLoading(false);
     }
   };
 
   const logout = async () => {
     try {
       setError(null);
-      await api.logout();
+      const response = await api.logout();
       setUser(null);
+
+      // If SSO logout URL provided, redirect to end SSO session
+      if (response.ssoLogoutUrl) {
+        window.location.href = response.ssoLogoutUrl;
+      }
     } catch (err) {
       const message = err instanceof Error ? err.message : "Logout failed";
       setError(message);
@@ -80,7 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const clearError = () => setError(null);
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, login, register, logout, clearError }}>
+    <AuthContext.Provider value={{ user, loading, error, loginWithSSO, logout, clearError }}>
       {children}
     </AuthContext.Provider>
   );

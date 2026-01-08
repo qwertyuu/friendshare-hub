@@ -54,11 +54,6 @@ const Index = () => {
                     <ArrowRight className="h-5 w-5" />
                   </Link>
                 </Button>
-                <Button variant="outline" size="xl" asChild>
-                  <Link to="/register">
-                    Créer un compte
-                  </Link>
-                </Button>
               </div>
 
               {/* Category pills */}
@@ -82,8 +77,8 @@ const Index = () => {
           <div className="container">
             <div className="max-w-2xl mx-auto text-center">
               <p className="text-lg text-muted-foreground leading-relaxed">
-                Prête et emprunte des objets avec tes amis. 
-                Inscris-toi et attends la validation d'un admin pour accéder à l'inventaire partagé.
+                Prête et emprunte des objets avec tes amis.
+                Connecte-toi pour accéder à l'inventaire partagé.
               </p>
             </div>
           </div>

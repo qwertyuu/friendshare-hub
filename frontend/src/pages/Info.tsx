@@ -54,14 +54,9 @@ export default function Info() {
 
         {/* CTA Section */}
         <div className="max-w-3xl mx-auto text-center">
-          <div className="flex gap-4 justify-center flex-wrap">
-            <Button variant="outline" size="lg" asChild>
-              <Link to="/login">Connexion</Link>
-            </Button>
-            <Button variant="hero" size="lg" asChild>
-              <Link to="/register">Créer un compte</Link>
-            </Button>
-          </div>
+          <Button variant="hero" size="lg" asChild>
+            <Link to="/login">Connexion</Link>
+          </Button>
         </div>
       </main>
     </div>

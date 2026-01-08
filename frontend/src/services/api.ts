@@ -37,23 +37,15 @@ class ApiClient {
     return response.json();
   }
 
-  // Auth endpoints
-  async register(email: string, password: string, name: string): Promise<AuthResponse> {
-    return this.request<AuthResponse>("/api/auth/register", {
-      method: "POST",
-      body: JSON.stringify({ email, password, name }),
+  // SSO Auth endpoints
+  async getLoginUrl(): Promise<{ authorizationUrl: string }> {
+    return this.request<{ authorizationUrl: string }>("/api/auth/login", {
+      method: "GET",
     });
   }
 
-  async login(email: string, password: string): Promise<AuthResponse> {
-    return this.request<AuthResponse>("/api/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-    });
-  }
-
-  async logout(): Promise<void> {
-    await this.request("/api/auth/logout", {
+  async logout(): Promise<{ message: string; ssoLogoutUrl?: string }> {
+    return this.request<{ message: string; ssoLogoutUrl?: string }>("/api/auth/logout", {
       method: "POST",
     });
   }
