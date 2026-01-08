@@ -6,6 +6,9 @@ set -e
 echo "Starting backend server..."
 echo "Running Prisma migrations..."
 
+# Change to backend directory where prisma schema is located
+cd backend
+
 # Run migrations with better error handling
 npx prisma migrate deploy
 
