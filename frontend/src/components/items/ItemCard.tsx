@@ -3,9 +3,9 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { getCategoryEmoji, getCategoryLabel } from "@/lib/categories";
 import { User } from "lucide-react";
+import { getAPIUrl } from "@/lib/utils";
 
-// @ts-ignore - window.ENV is injected at runtime
-const API_URL = window.ENV?.VITE_API_URL || import.meta.env.VITE_API_URL || "http://localhost:3000";
+const API_URL = getAPIUrl();
 
 interface ItemCardProps {
   item: Item;

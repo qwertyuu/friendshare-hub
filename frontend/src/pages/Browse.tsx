@@ -1,12 +1,11 @@
 import { useState, useMemo } from "react";
 import { Header } from "@/components/layout/Header";
 import { Input } from "@/components/ui/input";
-import { Search, Package, Calendar, MapPin, X } from "lucide-react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Search, Package, Calendar } from "lucide-react";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { api } from "@/services/api";
 import { useOptimisticUpdate } from "@/utils/mutations";
 import { ItemCard } from "@/components/items/ItemCard";
-import { categories } from "@/lib/categories";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { Item } from "@/types";
 import {
@@ -22,6 +21,7 @@ import { getCategoryEmoji, getCategoryLabel } from "@/lib/categories";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { getAPIUrl } from "@/lib/utils";
 
 const categoryOptions = [
   { id: "all", emoji: "✨", name: "Tout" },
@@ -36,7 +36,6 @@ const categoryOptions = [
 ];
 
 export default function Browse() {
-  const queryClient = useQueryClient();
   const { invalidateQueries } = useOptimisticUpdate();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -45,6 +44,7 @@ export default function Browse() {
   const [borrowMessage, setBorrowMessage] = useState("");
   const [borrowStartDate, setBorrowStartDate] = useState("");
   const [borrowEndDate, setBorrowEndDate] = useState("");
+  const API_URL = getAPIUrl();
 
   const { data: itemsData, isLoading } = useQuery({
     queryKey: ["items", selectedCategory, page],
@@ -197,7 +197,7 @@ export default function Browse() {
                 <div className="relative h-64 bg-muted rounded-lg overflow-hidden">
                   {selectedItem.images && selectedItem.images.length > 0 ? (
                     <img
-                      src={`${(window as any).ENV?.VITE_API_URL || import.meta.env.VITE_API_URL || "http://localhost:3000"}/uploads/${selectedItem.images[0].filePath}`}
+                      src={`${API_URL}/uploads/${selectedItem.images[0].filePath}`}
                       alt={selectedItem.title}
                       className="w-full h-full object-cover"
                     />

@@ -2,9 +2,9 @@ import { ItemImage } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Trash2, Loader2 } from "lucide-react";
 import { useState } from "react";
+import { getAPIUrl } from "@/lib/utils";
 
-// @ts-ignore - window.ENV is injected at runtime
-const API_URL = window.ENV?.VITE_API_URL || import.meta.env.VITE_API_URL || "http://localhost:3000";
+const API_URL = getAPIUrl();
 
 interface ImageGalleryProps {
   images: ItemImage[];

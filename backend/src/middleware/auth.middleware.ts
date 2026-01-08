@@ -19,7 +19,7 @@ export const auth = (req: Request, res: Response, next: NextFunction) => {
     req.user = {
       id: decoded.userId,
       email: decoded.email,
-      name: '', // Will be populated from DB if needed
+      name: '',
       role: decoded.role,
     };
 

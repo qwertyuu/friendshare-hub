@@ -1,7 +1,7 @@
 import { User } from "@/types";
+import { getAPIUrl } from "@/lib/utils";
 
-// @ts-ignore - window.ENV is injected at runtime
-const API_URL = window.ENV?.VITE_API_URL || import.meta.env.VITE_API_URL || "http://localhost:3000";
+const API_URL = getAPIUrl();
 
 export interface AuthResponse {
   message: string;

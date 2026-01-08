@@ -22,8 +22,8 @@ export function Header() {
     try {
       await logout();
       navigate("/");
-    } catch (error) {
-      console.error("Logout failed:", error);
+    } catch {
+      navigate("/");
     }
   };
 

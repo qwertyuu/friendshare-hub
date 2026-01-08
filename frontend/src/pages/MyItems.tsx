@@ -65,7 +65,6 @@ export default function MyItems() {
         try {
           await api.uploadImages(newItem.id, selectedFiles);
         } catch (error) {
-          console.error("Image upload failed:", error);
           toast.error("Objet créé mais erreur lors de l'upload des images");
         }
       }
@@ -90,7 +89,6 @@ export default function MyItems() {
         try {
           await api.uploadImages(editingItem.id, selectedFiles);
         } catch (error) {
-          console.error("Image upload failed:", error);
           toast.error("Objet modifié mais erreur lors de l'upload des images");
         }
       }
@@ -125,14 +123,13 @@ export default function MyItems() {
     onSuccess: async (_, { itemId }) => {
       toast.success("Image supprimée!");
       invalidateQueries([["my-items"]]);
-      // Refetch the editing item to update the images list in the UI
       if (editingItem) {
         try {
           const response = await api.getItemById(itemId);
           const updatedItem = response.item || response;
           setEditingItem(updatedItem);
         } catch (error) {
-          console.error("Failed to refetch item after image deletion:", error);
+          toast.error("Erreur lors de la mise à jour de la liste d'images");
         }
       }
     },
