@@ -17,4 +17,7 @@ router.get('/users', adminController.listUsers);
 // Delete user
 router.delete('/users/:id', adminController.deleteUser);
 
+// Delete item (moderation)
+router.delete('/items/:id', adminController.deleteItem);
+
 export default router;

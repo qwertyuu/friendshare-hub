@@ -271,6 +271,12 @@ class ApiClient {
       method: "DELETE",
     });
   }
+
+  async adminDeleteItem(itemId: string) {
+    return this.request(`/api/admin/items/${itemId}`, {
+      method: "DELETE",
+    });
+  }
 }
 
 export const api = new ApiClient(API_URL);

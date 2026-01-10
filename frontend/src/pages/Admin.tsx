@@ -57,9 +57,38 @@ export default function Admin() {
     }
   };
 
-  if (statsLoading || usersLoading) return <LoadingSpinner />;
+  // Fetch all items
+  const { data: itemsData, isLoading: itemsLoading } = useQuery({
+    queryKey: ["admin-items"],
+    queryFn: async () => {
+      const response = await api.getItems("all", "all", 1, 1000);
+      return response.items || response || [];
+    },
+  });
+
+  // Delete item mutation
+  const deleteItemMutation = useMutation({
+    mutationFn: (itemId: string) => api.adminDeleteItem(itemId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-items"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-statistics"] });
+      toast.success("Objet supprimé");
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Erreur lors de la suppression");
+    },
+  });
+
+  const handleDeleteItem = (itemId: string, itemTitle: string) => {
+    if (confirm(`Voulez-vous vraiment supprimer l'objet "${itemTitle}" ?`)) {
+      deleteItemMutation.mutate(itemId);
+    }
+  };
+
+  if (statsLoading || usersLoading || itemsLoading) return <LoadingSpinner />;
 
   const users = Array.isArray(usersData) ? usersData : [];
+  const items = Array.isArray(itemsData) ? itemsData : [];
 
   return (
     <ProtectedRoute requiredRole="ADMIN">
@@ -193,7 +222,7 @@ export default function Admin() {
           </Card>
 
           {/* User List */}
-          <Card>
+          <Card className="mb-8">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Users className="h-5 w-5 text-primary" />
@@ -246,6 +275,71 @@ export default function Admin() {
                   </h3>
                   <p className="text-muted-foreground">
                     Les utilisateurs apparaîtront ici
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Items List */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5 text-primary" />
+                Objets (Modération)
+              </CardTitle>
+              <p className="text-sm text-muted-foreground mt-1">
+                Supprimer les objets de contenu inapproprié
+              </p>
+            </CardHeader>
+            <CardContent>
+              {items.length > 0 ? (
+                <div className="space-y-2">
+                  {items.map((item: any) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between p-4 border rounded-lg bg-card"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <p className="font-medium text-foreground">{item.title}</p>
+                          <Badge variant="outline">{item.category}</Badge>
+                          <Badge
+                            variant={
+                              item.status === "AVAILABLE" ? "default" : "secondary"
+                            }
+                          >
+                            {item.status === "AVAILABLE"
+                              ? "Disponible"
+                              : "Emprunté"}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-1">
+                          {item.description}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          Propriétaire: {item.owner?.name || "Inconnu"}
+                        </p>
+                      </div>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => handleDeleteItem(item.id, item.title)}
+                        disabled={deleteItemMutation.isPending}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold text-foreground mb-2">
+                    Aucun objet
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Les objets apparaîtront ici
                   </p>
                 </div>
               )}

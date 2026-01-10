@@ -123,4 +123,38 @@ export const adminController = {
     }
   },
 
+  async deleteItem(req: Request, res: Response, next: NextFunction) {
+    try {
+      if (!req.user) {
+        throw new UnauthorizedError('Authentication required');
+      }
+
+      if (req.user.role !== 'ADMIN') {
+        throw new UnauthorizedError('Admin access required');
+      }
+
+      const { id } = req.params;
+
+      // Check if item exists
+      const item = await prisma.item.findUnique({
+        where: { id },
+      });
+
+      if (!item) {
+        throw new NotFoundError('Item not found');
+      }
+
+      // Delete item (cascade will handle related images, requests, etc.)
+      await prisma.item.delete({
+        where: { id },
+      });
+
+      return res.json({
+        message: 'Item deleted successfully',
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
 };
