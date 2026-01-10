@@ -6,22 +6,22 @@ import { logger } from '../utils/logger.js';
 
 interface TokenPayload {
   userId: string;
-  email: string;
+  email?: string;
   role: 'USER' | 'ADMIN';
 }
 
 interface OIDCUserInfo {
   sub: string;
-  email: string;
+  email?: string;
   name: string;
   groups?: string[];
 }
 
 export const authService = {
-  generateToken(userId: string, email: string, role: 'USER' | 'ADMIN'): string {
+  generateToken(userId: string, email: string | null | undefined, role: 'USER' | 'ADMIN'): string {
     const payload: TokenPayload = {
       userId,
-      email,
+      email: email || undefined,
       role,
     };
 
@@ -68,38 +68,19 @@ export const authService = {
 
       logger.info('Updated existing SSO user', { userId: user.id });
     } else {
-      // Check if email already exists (link existing account)
-      const existingUser = await prisma.user.findUnique({
-        where: { email },
+      // Create new SSO user - each authentikId gets their own account
+      // SECURITY: Never link accounts based on email to prevent account takeover
+      user = await prisma.user.create({
+        data: {
+          email,
+          name,
+          role,
+          authentikId: sub,
+          lastLoginAt: new Date(),
+        },
       });
 
-      if (existingUser) {
-        // Link existing user to SSO
-        user = await prisma.user.update({
-          where: { id: existingUser.id },
-          data: {
-            authentikId: sub,
-            name,
-            role,
-            lastLoginAt: new Date(),
-          },
-        });
-
-        logger.info('Linked existing user to SSO', { userId: user.id });
-      } else {
-        // Create new SSO user
-        user = await prisma.user.create({
-          data: {
-            email,
-            name,
-            role,
-            authentikId: sub,
-            lastLoginAt: new Date(),
-          },
-        });
-
-        logger.info('Created new SSO user', { userId: user.id });
-      }
+      logger.info('Created new SSO user', { userId: user.id });
     }
 
     return user;

@@ -4,7 +4,7 @@ import { logger } from '../utils/logger.js';
 
 interface OIDCUserInfo {
   sub: string;
-  email: string;
+  email?: string;
   name: string;
   preferred_username?: string;
   groups?: string[];
