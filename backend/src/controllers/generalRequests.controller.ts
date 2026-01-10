@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../config/database.js';
+import { emailService } from '../services/email.service.js';
 
 export const generalRequestsController = {
   // List all general requests (public to authenticated users)
@@ -386,6 +387,21 @@ export const generalRequestsController = {
           },
         },
       });
+
+      // Fetch the original request to get requester info for email
+      const originalRequest = await prisma.generalRequest.findUnique({
+        where: { id },
+        include: {
+          requester: {
+            select: { id: true, name: true, email: true },
+          },
+        },
+      });
+
+      // Send notification email to original requester
+      if (originalRequest) {
+        await emailService.notifyGeneralRequestResponse(response, originalRequest);
+      }
 
       return res.status(201).json({ response });
     } catch (error) {

@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { prisma } from '../config/database.js';
 import { NotFoundError, ForbiddenError, UnauthorizedError, ConflictError } from '../utils/errors.js';
+import { emailService } from '../services/email.service.js';
 
 export const requestsController = {
   async listRequests(req: Request, res: Response, next: NextFunction) {
@@ -135,6 +136,9 @@ export const requestsController = {
         },
       });
 
+      // Send notification email to item owner
+      await emailService.notifyBorrowRequest(request);
+
       return res.status(201).json({ request });
     } catch (error) {
       next(error);
@@ -188,6 +192,9 @@ export const requestsController = {
           },
         },
       });
+
+      // Send notification email to requester
+      await emailService.notifyRequestApproved(updatedRequest);
 
       return res.json({ request: updatedRequest });
     } catch (error) {
@@ -243,6 +250,9 @@ export const requestsController = {
         },
       });
 
+      // Send notification email to requester
+      await emailService.notifyRequestRejected(updatedRequest);
+
       return res.json({ request: updatedRequest });
     } catch (error) {
       next(error);
@@ -297,6 +307,9 @@ export const requestsController = {
           },
         },
       });
+
+      // Send notification emails to both parties
+      await emailService.notifyRequestCompleted(updatedRequest);
 
       return res.json({ request: updatedRequest });
     } catch (error) {
@@ -354,6 +367,9 @@ export const requestsController = {
           },
         },
       });
+
+      // Send notification email to item owner
+      await emailService.notifyRequestCancelled(updatedRequest);
 
       return res.json({ request: updatedRequest });
     } catch (error) {

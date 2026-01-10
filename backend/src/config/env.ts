@@ -27,6 +27,16 @@ const envSchema = z.object({
   OIDC_SCOPE: z.string().default('openid profile email groups'),
   OIDC_ADMIN_GROUP: z.string().default('friendshare-admins'),
   OIDC_USER_GROUP: z.string().default('friendshare-users'),
+
+  // Email Configuration
+  EMAIL_ENABLED: z.coerce.boolean().default(true),
+  SMTP_HOST: z.string().default('localhost'),
+  SMTP_PORT: z.coerce.number().default(587),
+  SMTP_SECURE: z.coerce.boolean().default(false),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASS: z.string().optional(),
+  SMTP_FROM_EMAIL: z.string().email().default('noreply@friendshare.com'),
+  SMTP_FROM_NAME: z.string().default('FriendShare Hub'),
 }).refine(
   (data) => {
     // Si OIDC est activé, les credentials doivent être fournis
