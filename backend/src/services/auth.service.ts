@@ -12,7 +12,7 @@ interface TokenPayload {
 
 interface OIDCUserInfo {
   sub: string;
-  email: string;
+  email?: string;
   name: string;
   groups?: string[];
 }
@@ -42,7 +42,10 @@ export const authService = {
 
   // SSO user synchronization
   async syncOIDCUser(userInfo: OIDCUserInfo): Promise<any> {
-    const { sub, email, name, groups } = userInfo;
+    const { sub, email: providedEmail, name, groups } = userInfo;
+
+    // Generate email from sub if not provided by LDAP
+    const email = providedEmail || `${sub.replace(/[^a-zA-Z0-9]/g, '_')}@ldap.local`;
 
     // Map groups to role
     const role = oidcService.mapGroupsToRole(groups);
