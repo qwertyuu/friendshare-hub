@@ -214,7 +214,7 @@ export async function notifyGeneralRequestResponse(
 ): Promise<void> {
   try {
     const template = generalRequestResponseTemplate({
-      requesterName: originalRequester.name,
+      requesterName: originalRequester.requester.name,
       responderName: response.responder.name,
       requestTitle: originalRequester.title,
       itemTitle: response.item?.title,
@@ -222,7 +222,7 @@ export async function notifyGeneralRequestResponse(
       viewRequestUrl: `${env.FRONTEND_URL}/general-requests`,
     });
 
-    await sendEmail(originalRequester.email, template.subject, template.html, template.text);
+    await sendEmail(originalRequester.requester.email, template.subject, template.html, template.text);
   } catch (error) {
     logger.error('Error in notifyGeneralRequestResponse', error);
   }
