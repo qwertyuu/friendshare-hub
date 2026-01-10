@@ -6,22 +6,22 @@ import { logger } from '../utils/logger.js';
 
 interface TokenPayload {
   userId: string;
-  email?: string;
+  email: string;
   role: 'USER' | 'ADMIN';
 }
 
 interface OIDCUserInfo {
   sub: string;
-  email?: string;
+  email: string;
   name: string;
   groups?: string[];
 }
 
 export const authService = {
-  generateToken(userId: string, email: string | null | undefined, role: 'USER' | 'ADMIN'): string {
+  generateToken(userId: string, email: string, role: 'USER' | 'ADMIN'): string {
     const payload: TokenPayload = {
       userId,
-      email: email || undefined,
+      email,
       role,
     };
 
