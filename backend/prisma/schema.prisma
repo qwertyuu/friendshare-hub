@@ -49,7 +49,7 @@ enum GeneralRequestStatus {
 
 model User {
   id                String          @id @default(uuid())
-  email             String          @unique
+  email             String?         @unique
   name              String
   role              UserRole        @default(USER)
   authentikId       String?         @unique @map("authentik_id")
