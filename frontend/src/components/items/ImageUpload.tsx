@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Upload, X, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -111,6 +111,15 @@ export function ImageUpload({
     processFiles(files);
   };
 
+  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const files = Array.from(e.clipboardData?.files || []);
+    if (files.length === 0) return;
+    processFiles(files);
+  };
+
   const handleRemoveFile = (id: string) => {
     const newFiles = selectedFiles.filter((_, index) => {
       return previews[index]?.id !== id;
@@ -164,6 +173,7 @@ export function ImageUpload({
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
+        onPaste={handlePaste}
         onClick={() => inputRef.current?.click()}
         className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-colors ${
           isDragging
