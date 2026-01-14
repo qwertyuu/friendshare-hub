@@ -182,7 +182,7 @@ export default function MyItems() {
                 Ajouter
               </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
+            <DialogContent className="sm:max-w-md">
               <DialogHeader>
                 <DialogTitle>{editingItem ? "Modifier l'objet" : "Ajouter un objet"}</DialogTitle>
                 <DialogDescription>
