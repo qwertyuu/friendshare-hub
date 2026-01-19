@@ -14,7 +14,16 @@
       "mcp__playwright__browser_press_key",
       "mcp__playwright__browser_navigate",
       "mcp__playwright__browser_type",
-      "mcp__playwright__browser_resize"
+      "mcp__playwright__browser_resize",
+      "Bash(dir:*)",
+      "Bash(find:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(npm run type-check:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm run build:frontend:*)",
+      "Bash(git worktree:*)",
+      "Bash(git checkout:*)"
     ]
   }
 }
