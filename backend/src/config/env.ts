@@ -36,7 +36,7 @@ const envSchema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   SMTP_FROM_EMAIL: z.string().email().default('noreply@friendshare.com'),
-  SMTP_FROM_NAME: z.string().default('FriendShare Hub'),
+  SMTP_FROM_NAME: z.string().default('Raphartage Club'),
 }).refine(
   (data) => {
     // Si OIDC est activé, les credentials doivent être fournis

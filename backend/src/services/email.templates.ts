@@ -7,7 +7,7 @@ export interface EmailTemplate {
 }
 
 /**
- * Base email template with FriendShare Hub branding
+ * Base email template with Raphartage Club branding
  */
 function baseEmailTemplate(content: string): string {
   return `
@@ -16,7 +16,7 @@ function baseEmailTemplate(content: string): string {
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FriendShare Hub</title>
+    <title>Raphartage Club</title>
   </head>
   <body style="margin: 0; padding: 0; font-family: 'Arial', sans-serif; background-color: #f4f4f4;">
     <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f4f4f4; padding: 20px 0;">
@@ -25,9 +25,9 @@ function baseEmailTemplate(content: string): string {
           <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
             <!-- Header -->
             <tr>
-              <td style="background: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
-                <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">FriendShare Hub</h1>
-                <p style="color: #E0E7FF; margin: 5px 0 0 0; font-size: 14px;">Partage communautaire d'objets</p>
+              <td style="background: linear-gradient(135deg, #2A9D8F 0%, #4DB8AC 100%); padding: 30px; text-align: center; border-radius: 8px 8px 0 0;">
+                <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: bold;">Raphartage Club</h1>
+                <p style="color: #F5F3F0; margin: 5px 0 0 0; font-size: 14px;">Le club de partage entre amis</p>
               </td>
             </tr>
 
@@ -42,10 +42,10 @@ function baseEmailTemplate(content: string): string {
             <tr>
               <td style="background-color: #f9fafb; padding: 20px 30px; text-align: center; border-radius: 0 0 8px 8px; border-top: 1px solid #e5e7eb;">
                 <p style="color: #6b7280; margin: 0; font-size: 12px;">
-                  Visitez <a href="${env.FRONTEND_URL}" style="color: #4F46E5; text-decoration: none; font-weight: bold;">FriendShare Hub</a>
+                  Visitez <a href="${env.FRONTEND_URL}" style="color: #2A9D8F; text-decoration: none; font-weight: bold;">Raphartage Club</a>
                 </p>
                 <p style="color: #9ca3af; margin: 10px 0 0 0; font-size: 11px;">
-                  Vous recevez ce message parce que vous faites partie de la communauté FriendShare Hub
+                  Vous recevez ce message parce que vous faites partie de la communauté Raphartage Club
                 </p>
               </td>
             </tr>
@@ -79,7 +79,7 @@ export function borrowRequestTemplate(data: {
       <strong>${data.requesterName}</strong> souhaite emprunter votre article : <strong>${data.itemTitle}</strong>
     </p>
 
-    <div style="background-color: #f3f4f6; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #4F46E5;">
+    <div style="background-color: #f3f4f6; padding: 20px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #2A9D8F;">
       <p style="color: #6b7280; font-size: 14px; margin: 0 0 10px 0; font-weight: bold;">Période demandée :</p>
       ${data.startDate ? `<p style="color: #374151; font-size: 14px; margin: 0 0 8px 0;"><strong>Du :</strong> ${data.startDate}</p>` : ''}
       ${data.endDate ? `<p style="color: #374151; font-size: 14px; margin: 0 0 10px 0;"><strong>Au :</strong> ${data.endDate}</p>` : ''}
@@ -92,7 +92,7 @@ export function borrowRequestTemplate(data: {
     <table cellpadding="0" cellspacing="0" style="margin: 25px 0; width: 100%;">
       <tr>
         <td align="center">
-          <a href="${data.viewRequestUrl}" style="display: inline-block; background-color: #4F46E5; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
+          <a href="${data.viewRequestUrl}" style="display: inline-block; background-color: #2A9D8F; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
             Voir la demande
           </a>
         </td>
@@ -221,7 +221,7 @@ export function requestCompletedTemplate(data: {
       Bonjour ${data.userName},
     </p>
     <p style="color: #374151; font-size: 16px; margin: 0 0 20px 0;">
-      L'emprunt de <strong>${data.itemTitle}</strong> a été marqué comme complété. Merci de votre participation à la communauté FriendShare Hub !
+      L'emprunt de <strong>${data.itemTitle}</strong> a été marqué comme complété. Merci de votre participation à la communauté Raphartage Club !
     </p>
 
     <div style="background-color: #f0fdf4; border-left: 4px solid #059669; padding: 15px; margin: 20px 0;">
@@ -235,7 +235,7 @@ export function requestCompletedTemplate(data: {
     </p>
   `;
 
-  const text = `Emprunt complété\n\nBonjour ${data.userName},\n\nL'emprunt de ${data.itemTitle} a été marqué comme complété.\n\nMerci de votre participation à FriendShare Hub !\n\nUn grand merci à ${otherPersonName} pour cette transaction !`;
+  const text = `Emprunt complété\n\nBonjour ${data.userName},\n\nL'emprunt de ${data.itemTitle} a été marqué comme complété.\n\nMerci de votre participation à Raphartage Club !\n\nUn grand merci à ${otherPersonName} pour cette transaction !`;
 
   return {
     subject: `Emprunt complété : "${data.itemTitle}"`,
@@ -272,6 +272,66 @@ export function requestCancelledTemplate(data: {
 
   return {
     subject: `Demande annulée : "${data.itemTitle}"`,
+    html: baseEmailTemplate(content),
+    text,
+  };
+}
+
+/**
+ * Email template for new general request notification (sent to all users)
+ */
+export function newGeneralRequestTemplate(data: {
+  requesterName: string;
+  requestTitle: string;
+  description?: string | null;
+  startDate?: Date | null;
+  endDate?: Date | null;
+  viewRequestUrl: string;
+}): EmailTemplate {
+  const formatDate = (date: Date | null | undefined) => {
+    if (!date) return '';
+    return new Date(date).toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const content = `
+    <h2 style="color: #2563eb; margin: 0 0 20px 0; font-size: 22px;">Nouvelle demande dans la communauté</h2>
+    <p style="color: #374151; font-size: 16px; margin: 0 0 15px 0;">
+      Bonjour,
+    </p>
+    <p style="color: #374151; font-size: 16px; margin: 0 0 15px 0;">
+      ${data.requesterName} recherche quelque chose qui pourrait vous intéresser : <strong>${data.requestTitle}</strong>
+    </p>
+
+    <div style="background-color: #eff6ff; border-left: 4px solid #2563eb; padding: 15px; margin: 20px 0;">
+      <p style="color: #1e40af; font-size: 14px; margin: 0 0 10px 0;"><strong>Demande :</strong> ${data.requestTitle}</p>
+      ${data.description ? `<p style="color: #1e40af; font-size: 14px; margin: 0 0 10px 0;"><strong>Description :</strong> ${data.description}</p>` : ''}
+      ${data.startDate ? `<p style="color: #1e40af; font-size: 14px; margin: 0 0 5px 0;"><strong>Date de début :</strong> ${formatDate(data.startDate)}</p>` : ''}
+      ${data.endDate ? `<p style="color: #1e40af; font-size: 14px; margin: 0;"><strong>Date de fin :</strong> ${formatDate(data.endDate)}</p>` : ''}
+    </div>
+
+    <table cellpadding="0" cellspacing="0" style="margin: 25px 0; width: 100%;">
+      <tr>
+        <td align="center">
+          <a href="${data.viewRequestUrl}" style="display: inline-block; background-color: #2563eb; color: #ffffff; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: 600; font-size: 16px;">
+            Voir la demande
+          </a>
+        </td>
+      </tr>
+    </table>
+
+    <p style="color: #6b7280; font-size: 14px; margin: 20px 0 0 0;">
+      Si vous avez un article qui correspond à cette demande, n'hésitez pas à y répondre !
+    </p>
+  `;
+
+  const text = `Nouvelle demande dans la communauté\n\nBonjour,\n\n${data.requesterName} recherche quelque chose qui pourrait vous intéresser : ${data.requestTitle}\n\n${data.description ? `Description : ${data.description}\n\n` : ''}${data.startDate ? `Date de début : ${formatDate(data.startDate)}\n` : ''}${data.endDate ? `Date de fin : ${formatDate(data.endDate)}\n` : ''}\nVoir la demande : ${data.viewRequestUrl}`;
+
+  return {
+    subject: `Nouvelle demande : "${data.requestTitle}"`,
     html: baseEmailTemplate(content),
     text,
   };

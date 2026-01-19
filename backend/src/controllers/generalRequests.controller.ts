@@ -132,6 +132,14 @@ export const generalRequestsController = {
         },
       });
 
+      // Notify all users about the new general request
+      try {
+        await emailService.notifyNewGeneralRequest(request);
+      } catch (error) {
+        // Log error but don't fail the request creation
+        console.error('Error sending email notifications:', error);
+      }
+
       return res.status(201).json({ request });
     } catch (error) {
       next(error);

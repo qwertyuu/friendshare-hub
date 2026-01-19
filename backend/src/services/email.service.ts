@@ -9,6 +9,7 @@ import {
   requestCompletedTemplate,
   requestCancelledTemplate,
   generalRequestResponseTemplate,
+  newGeneralRequestTemplate,
 } from './email.templates.js';
 import type {
   BorrowRequestWithRelations,
@@ -228,6 +229,54 @@ export async function notifyGeneralRequestResponse(
   }
 }
 
+/**
+ * Notify all users about a new general request (except the requester)
+ */
+export async function notifyNewGeneralRequest(request: GeneralRequestWithRequester): Promise<void> {
+  try {
+    // Get all users except the requester
+    const users = await prisma.user.findMany({
+      where: {
+        id: {
+          not: request.requesterId,
+        },
+      },
+      select: {
+        email: true,
+        name: true,
+      },
+    });
+
+    if (users.length === 0) {
+      logger.debug('No users to notify for new general request', { requestId: request.id });
+      return;
+    }
+
+    const template = newGeneralRequestTemplate({
+      requesterName: request.requester.name,
+      requestTitle: request.title,
+      description: request.description,
+      startDate: request.startDate,
+      endDate: request.endDate,
+      viewRequestUrl: `${env.FRONTEND_URL}/general-requests`,
+    });
+
+    // Send emails to all users in parallel
+    const emailPromises = users.map(user =>
+      sendEmail(user.email, template.subject, template.html, template.text)
+    );
+
+    await Promise.allSettled(emailPromises);
+
+    logger.info('Notified users of new general request', {
+      requestId: request.id,
+      recipientCount: users.length,
+    });
+  } catch (error) {
+    logger.error('Error in notifyNewGeneralRequest', error);
+  }
+}
+
 export const emailService = {
   notifyBorrowRequest,
   notifyRequestApproved,
@@ -235,4 +284,5 @@ export const emailService = {
   notifyRequestCompleted,
   notifyRequestCancelled,
   notifyGeneralRequestResponse,
+  notifyNewGeneralRequest,
 };

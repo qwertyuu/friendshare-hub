@@ -53,7 +53,11 @@ export interface GeneralRequestResponseWithRelations {
 
 export interface GeneralRequestWithRequester {
   id: string;
+  requesterId: string;
   title: string;
+  description: string | null;
+  startDate: Date | null;
+  endDate: Date | null;
   requester: {
     id: string;
     name: string;
