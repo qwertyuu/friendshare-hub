@@ -1,4 +1,4 @@
-import { User } from "@/types";
+import { User, Item, PaginatedResponse } from "@/types";
 import { getAPIUrl } from "@/lib/utils";
 
 const API_URL = getAPIUrl();
@@ -58,14 +58,21 @@ class ApiClient {
   }
 
   // Items endpoints
-  async getItems(category?: string, status?: string, page: number = 1, limit: number = 20) {
+  async getItems(
+    category?: string,
+    status?: string,
+    page: number = 1,
+    limit: number = 20,
+    search?: string
+  ): Promise<PaginatedResponse<Item>> {
     const params = new URLSearchParams();
     if (category && category !== "all") params.append("category", category);
     if (status && status !== "all") params.append("status", status);
+    if (search) params.append("search", search);
     params.append("page", page.toString());
     params.append("limit", limit.toString());
 
-    return this.request(`/api/items?${params.toString()}`, {
+    return this.request<PaginatedResponse<Item>>(`/api/items?${params.toString()}`, {
       method: "GET",
     });
   }

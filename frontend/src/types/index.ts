@@ -105,3 +105,13 @@ export interface GeneralRequestResponse {
   };
   item?: Item;
 }
+
+export interface PaginatedResponse<T> {
+  items: T[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
+}

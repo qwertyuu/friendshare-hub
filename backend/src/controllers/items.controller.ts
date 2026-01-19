@@ -21,7 +21,7 @@ export const itemsController = {
         throw new UnauthorizedError('Authentication required');
       }
 
-      const { category, status, page = '1', limit = '20' } = req.query;
+      const { category, status, search, page = '1', limit = '20' } = req.query;
       const pageNum = Math.max(1, parseInt(page as string) || 1);
       const limitNum = Math.min(100, Math.max(1, parseInt(limit as string) || 20));
       const skip = (pageNum - 1) * limitNum;
@@ -32,6 +32,12 @@ export const itemsController = {
       }
       if (status && status !== 'all') {
         where.status = status;
+      }
+      if (search && search !== '') {
+        where.OR = [
+          { title: { contains: search as string, mode: 'insensitive' } },
+          { description: { contains: search as string, mode: 'insensitive' } }
+        ];
       }
 
       const [items, total] = await Promise.all([

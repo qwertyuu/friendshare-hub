@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "@/components/layout/Header";
 import { Input } from "@/components/ui/input";
 import { Search, Package, Calendar } from "lucide-react";
@@ -8,6 +8,7 @@ import { useOptimisticUpdate } from "@/utils/mutations";
 import { ItemCard } from "@/components/items/ItemCard";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { Item } from "@/types";
+import { Pagination } from "@/components/Pagination";
 import {
   Dialog,
   DialogContent,
@@ -46,11 +47,16 @@ export default function Browse() {
   const [borrowEndDate, setBorrowEndDate] = useState("");
   const API_URL = getAPIUrl();
 
+  // Reset page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [selectedCategory, searchQuery]);
+
   const { data: itemsData, isLoading } = useQuery({
-    queryKey: ["items", selectedCategory, page],
+    queryKey: ["items", selectedCategory, searchQuery, page],
     queryFn: async () => {
       const category = selectedCategory === "all" ? undefined : selectedCategory;
-      return api.getItems(category, "AVAILABLE", page, 20);
+      return api.getItems(category, "AVAILABLE", page, 20, searchQuery || undefined);
     },
   });
 
@@ -83,14 +89,16 @@ export default function Browse() {
     },
   });
 
-  // Filter items by search query
-  const filteredItems = useMemo(() => {
-    if (!itemsData?.items) return [];
-    return itemsData.items.filter((item) =>
-      item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.description?.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  }, [itemsData?.items, searchQuery]);
+  // Extract pagination data
+  const items = itemsData?.items || [];
+  const totalItems = itemsData?.pagination.total || 0;
+  const totalPages = itemsData?.pagination.pages || 1;
+
+  // Handle page change with scroll
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   if (isLoading) return <LoadingSpinner />;
 
@@ -156,17 +164,34 @@ export default function Browse() {
           </div>
         </div>
 
+        {/* Total count */}
+        {!isLoading && (
+          <p className="text-sm text-muted-foreground mb-4">
+            {totalItems} objet{totalItems !== 1 ? 's' : ''} disponible{totalItems !== 1 ? 's' : ''}
+          </p>
+        )}
+
         {/* Items Grid */}
-        {filteredItems.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredItems.map((item) => (
-              <ItemCard
-                key={item.id}
-                item={item}
-                onClick={() => setSelectedItem(item)}
-              />
-            ))}
-          </div>
+        {items.length > 0 ? (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {items.map((item) => (
+                <ItemCard
+                  key={item.id}
+                  item={item}
+                  onClick={() => setSelectedItem(item)}
+                />
+              ))}
+            </div>
+
+            {/* Pagination */}
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              isLoading={isLoading}
+            />
+          </>
         ) : (
           <div className="text-center py-16">
             <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-muted mb-4">
