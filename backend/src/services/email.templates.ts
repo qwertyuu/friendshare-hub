@@ -303,7 +303,7 @@ export function newGeneralRequestTemplate(data: {
       Bonjour,
     </p>
     <p style="color: #374151; font-size: 16px; margin: 0 0 15px 0;">
-      ${data.requesterName} recherche quelque chose qui pourrait vous intéresser : <strong>${data.requestTitle}</strong>
+      ${data.requesterName} recherche quelque chose : <strong>${data.requestTitle}</strong>
     </p>
 
     <div style="background-color: #eff6ff; border-left: 4px solid #2563eb; padding: 15px; margin: 20px 0;">
@@ -328,7 +328,7 @@ export function newGeneralRequestTemplate(data: {
     </p>
   `;
 
-  const text = `Nouvelle demande dans la communauté\n\nBonjour,\n\n${data.requesterName} recherche quelque chose qui pourrait vous intéresser : ${data.requestTitle}\n\n${data.description ? `Description : ${data.description}\n\n` : ''}${data.startDate ? `Date de début : ${formatDate(data.startDate)}\n` : ''}${data.endDate ? `Date de fin : ${formatDate(data.endDate)}\n` : ''}\nVoir la demande : ${data.viewRequestUrl}`;
+  const text = `Nouvelle demande dans la communauté\n\nBonjour,\n\n${data.requesterName} recherche quelque chose : ${data.requestTitle}\n\n${data.description ? `Description : ${data.description}\n\n` : ''}${data.startDate ? `Date de début : ${formatDate(data.startDate)}\n` : ''}${data.endDate ? `Date de fin : ${formatDate(data.endDate)}\n` : ''}\nVoir la demande : ${data.viewRequestUrl}`;
 
   return {
     subject: `Nouvelle demande : "${data.requestTitle}"`,
