@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "@/components/layout/Header";
 import { Button } from "@/components/ui/button";
 import { Package, Plus, Edit2, Trash2, Loader2 } from "lucide-react";
@@ -9,6 +9,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOptimisticUpdate } from "@/utils/mutations";
 import { ItemCard } from "@/components/items/ItemCard";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
+import { Pagination } from "@/components/Pagination";
 import {
   Dialog,
   DialogContent,
@@ -39,14 +40,22 @@ export default function MyItems() {
   const [editingItem, setEditingItem] = useState<Item | null>(null);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
   // Fetch user's items
   const { data: itemsData, isLoading } = useQuery({
-    queryKey: ["my-items", user?.id],
+    queryKey: ["my-items", user?.id, page],
     queryFn: async () => {
-      const response = await api.getItems();
-      // Filter to only user's items
-      return response.items.filter((item) => item.ownerId === user?.id);
+      const response = await api.getItems(undefined, undefined, page, 20);
+      // Filter to only user's items (backend filtering would be better)
+      return {
+        items: response.items.filter((item) => item.ownerId === user?.id),
+        pagination: {
+          ...response.pagination,
+          total: response.items.filter((item) => item.ownerId === user?.id).length,
+          pages: Math.ceil(response.items.filter((item) => item.ownerId === user?.id).length / 20)
+        }
+      };
     },
     enabled: !!user?.id,
   });
@@ -150,9 +159,18 @@ export default function MyItems() {
     }
   };
 
-  if (isLoading) return <LoadingSpinner />;
+  // Extract pagination data
+  const items = itemsData?.items || [];
+  const totalItems = itemsData?.pagination.total || 0;
+  const totalPages = itemsData?.pagination.pages || 1;
 
-  const items = itemsData || [];
+  // Handle page change with scroll
+  const handlePageChange = (newPage: number) => {
+    setPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  if (isLoading) return <LoadingSpinner />;
 
   return (
     <div className="min-h-screen bg-background">
@@ -224,34 +242,51 @@ export default function MyItems() {
           </Dialog>
         </div>
 
+        {/* Total count */}
+        {!isLoading && items.length > 0 && (
+          <p className="text-sm text-muted-foreground mb-4">
+            {totalItems} objet{totalItems !== 1 ? 's' : ''}
+          </p>
+        )}
+
         {/* Items Grid or Empty State */}
         {items.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {items.map((item) => (
-              <div key={item.id} className="relative group">
-                <ItemCard item={item} />
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => {
-                      setEditingItem(item);
-                      setDialogOpen(true);
-                    }}
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => setDeleteConfirm(item.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {items.map((item) => (
+                <div key={item.id} className="relative group">
+                  <ItemCard item={item} />
+                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => {
+                        setEditingItem(item);
+                        setDialogOpen(true);
+                      }}
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => setDeleteConfirm(item.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+
+            {/* Pagination */}
+            <Pagination
+              currentPage={page}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              isLoading={isLoading}
+            />
+          </>
         ) : (
           <div className="text-center py-16">
             <div className="inline-flex h-16 w-16 items-center justify-center rounded-2xl bg-muted mb-4">
