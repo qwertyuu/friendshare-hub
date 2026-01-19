@@ -41,24 +41,26 @@ export default function MyItems() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
 
-  // Fetch user's items
-  const { data: itemsData, isLoading } = useQuery({
-    queryKey: ["my-items", user?.id, page],
+  // Fetch ALL user's items (no backend pagination - we filter by user)
+  const { data: allItemsData, isLoading } = useQuery({
+    queryKey: ["my-items", user?.id],
     queryFn: async () => {
-      const response = await api.getItems(undefined, undefined, page, 20);
-      // Filter to only user's items (backend filtering would be better)
-      return {
-        items: response.items.filter((item) => item.ownerId === user?.id),
-        pagination: {
-          ...response.pagination,
-          total: response.items.filter((item) => item.ownerId === user?.id).length,
-          pages: Math.ceil(response.items.filter((item) => item.ownerId === user?.id).length / 20)
-        }
-      };
+      // Fetch with high limit to get all items, then filter
+      const response = await api.getItems(undefined, undefined, 1, 1000);
+      return response.items.filter((item) => item.ownerId === user?.id);
     },
     enabled: !!user?.id,
   });
+
+  // Paginate in frontend
+  const allItems = allItemsData || [];
+  const totalItems = allItems.length;
+  const totalPages = Math.ceil(totalItems / ITEMS_PER_PAGE);
+  const startIndex = (page - 1) * ITEMS_PER_PAGE;
+  const endIndex = startIndex + ITEMS_PER_PAGE;
+  const items = allItems.slice(startIndex, endIndex);
 
   // Create item mutation
   const createItemMutation = useMutation({
@@ -158,11 +160,6 @@ export default function MyItems() {
       await createItemMutation.mutateAsync(data);
     }
   };
-
-  // Extract pagination data
-  const items = itemsData?.items || [];
-  const totalItems = itemsData?.pagination.total || 0;
-  const totalPages = itemsData?.pagination.pages || 1;
 
   // Handle page change with scroll
   const handlePageChange = (newPage: number) => {
