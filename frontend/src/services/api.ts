@@ -97,6 +97,13 @@ class ApiClient {
     });
   }
 
+  async updateItemStatus(id: string, status: "AVAILABLE" | "UNAVAILABLE") {
+    return this.request(`/api/items/${id}/status`, {
+      method: "PUT",
+      body: JSON.stringify({ status }),
+    });
+  }
+
   async deleteItem(id: string) {
     return this.request(`/api/items/${id}`, {
       method: "DELETE",

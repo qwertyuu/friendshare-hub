@@ -35,6 +35,16 @@ export interface Item {
     email: string;
   };
   images: ItemImage[];
+  requests?: Array<{
+    id: string;
+    requester: {
+      id: string;
+      name: string;
+      email: string;
+    };
+    startDate: string | null;
+    endDate: string | null;
+  }>;
 }
 
 export interface ItemImage {

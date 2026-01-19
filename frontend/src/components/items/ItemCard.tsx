@@ -80,6 +80,13 @@ export function ItemCard({ item, onClick }: ItemCardProps) {
           <p className="text-sm text-muted-foreground line-clamp-2">{item.description}</p>
         )}
 
+        {/* Borrower Info */}
+        {item.status === 'BORROWED' && item.requests && item.requests.length > 0 && (
+          <div className="pt-1 text-xs text-muted-foreground">
+            <span className="font-medium">Emprunté par {item.requests[0].requester.name}</span>
+          </div>
+        )}
+
         {/* Owner Info */}
         <div className="pt-2 border-t border-border/50 flex items-center gap-2 text-xs text-muted-foreground">
           <User className="h-3 w-3" />

@@ -13,6 +13,7 @@ router.get('/', itemsController.list);
 router.get('/:id', itemsController.getById);
 router.post('/', itemsController.create);
 router.patch('/:id', itemsController.update);
+router.put('/:id/status', itemsController.updateStatus);
 router.delete('/:id', itemsController.delete);
 
 // Images nested routes

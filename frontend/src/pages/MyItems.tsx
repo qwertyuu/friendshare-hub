@@ -7,7 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { api } from "@/services/api";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOptimisticUpdate } from "@/utils/mutations";
-import { ItemCard } from "@/components/items/ItemCard";
+import { MyItemCard } from "@/components/items/MyItemCard";
 import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { Pagination } from "@/components/Pagination";
 import {
@@ -252,7 +252,7 @@ export default function MyItems() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {items.map((item) => (
                 <div key={item.id} className="relative group">
-                  <ItemCard item={item} />
+                  <MyItemCard item={item} />
                   <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-2">
                     <Button
                       size="sm"
