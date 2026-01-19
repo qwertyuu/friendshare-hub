@@ -262,7 +262,7 @@ export async function notifyNewGeneralRequest(request: GeneralRequestWithRequest
     });
 
     // Send emails to all users in parallel
-    const emailPromises = users.map(user =>
+    const emailPromises = users.map((user: { email: string; name: string }) =>
       sendEmail(user.email, template.subject, template.html, template.text)
     );
 
