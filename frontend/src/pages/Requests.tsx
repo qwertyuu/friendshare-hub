@@ -64,7 +64,9 @@ export default function Requests() {
     onSuccess: (_, requestId) => {
       toast.success("Demande marquée comme complétée!");
       removeRequest(requestId, [["requests-outgoing"], ["requests-incoming"]]);
-      invalidateQueries([["requests-outgoing"], ["requests-incoming"]]);
+      invalidateQueries([["requests-outgoing"], ["requests-incoming"], ["my-items"], ["browse"]]);
+      queryClient.invalidateQueries({ queryKey: ["my-items"] });
+      queryClient.invalidateQueries({ queryKey: ["browse"] });
     },
     onError: (error) => {
       toast.error(error instanceof Error ? error.message : "Erreur lors de la mise à jour");
@@ -78,7 +80,9 @@ export default function Requests() {
     onSuccess: (_, data) => {
       toast.success("Demande approuvée!");
       updateRequestStatus(data.id, "APPROVED", ["requests-incoming"]);
-      invalidateQueries([["requests-incoming"]]);
+      invalidateQueries([["requests-incoming"], ["my-items"], ["browse"]]);
+      queryClient.invalidateQueries({ queryKey: ["my-items"] });
+      queryClient.invalidateQueries({ queryKey: ["browse"] });
       setApproveDialogOpen(null);
       setResponseMessage("");
     },

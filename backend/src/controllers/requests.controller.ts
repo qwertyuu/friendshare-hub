@@ -169,7 +169,7 @@ export const requestsController = {
         throw new ForbiddenError('You can only approve requests for your items');
       }
 
-      // Update request
+      // Update request and item status
       const updatedRequest = await prisma.borrowRequest.update({
         where: { id },
         data: {
@@ -191,6 +191,12 @@ export const requestsController = {
             select: { id: true, name: true, email: true },
           },
         },
+      });
+
+      // Update item status to BORROWED
+      await prisma.item.update({
+        where: { id: request.itemId },
+        data: { status: 'BORROWED' },
       });
 
       // Send notification email to requester
@@ -250,6 +256,15 @@ export const requestsController = {
         },
       });
 
+      // Ensure item remains AVAILABLE when request is rejected
+      // (it should already be AVAILABLE, but this is for safety)
+      if (request.status === 'APPROVED') {
+        await prisma.item.update({
+          where: { id: request.itemId },
+          data: { status: 'AVAILABLE' },
+        });
+      }
+
       // Send notification email to requester
       await emailService.notifyRequestRejected(updatedRequest);
 
@@ -306,6 +321,12 @@ export const requestsController = {
             select: { id: true, name: true, email: true },
           },
         },
+      });
+
+      // Update item status back to AVAILABLE
+      await prisma.item.update({
+        where: { id: request.itemId },
+        data: { status: 'AVAILABLE' },
       });
 
       // Send notification emails to both parties
