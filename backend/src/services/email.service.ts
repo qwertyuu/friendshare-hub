@@ -77,6 +77,12 @@ async function sendEmail(to: string, subject: string, html: string, text: string
       return;
     }
 
+    // Skip LDAP test accounts - these have no valid external email and cause bounce issues
+    if (to.endsWith('@ldap.local')) {
+      logger.debug('Skipping email to LDAP test account', { to, subject });
+      return;
+    }
+
     // Attempt to send
     const info = await transporter.sendMail({
       from: `"${env.SMTP_FROM_NAME}" <${env.SMTP_FROM_EMAIL}>`,
@@ -234,12 +240,23 @@ export async function notifyGeneralRequestResponse(
  */
 export async function notifyNewGeneralRequest(request: GeneralRequestWithRequester): Promise<void> {
   try {
-    // Get all users except the requester
+    // Get all users except the requester and LDAP test accounts
     const users = await prisma.user.findMany({
       where: {
-        id: {
-          not: request.requesterId,
-        },
+        AND: [
+          {
+            id: {
+              not: request.requesterId,
+            },
+          },
+          {
+            email: {
+              not: {
+                endsWith: '@ldap.local',
+              },
+            },
+          },
+        ],
       },
       select: {
         email: true,
